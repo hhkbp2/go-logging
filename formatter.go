@@ -57,25 +57,29 @@ func AttrOfRecord(i int, record *LogRecord) string {
     }
 }
 
-type Formatter struct {
+type Formatter interface {
+    Format(record *LogRecord) string
+}
+
+type DefaultFormatter struct {
     format     string
     dateFormat string
 }
 
-func NewFormatter(format string, dateFormat string) {
-    return &Formatter{
+func NewDefaultFormatter(format string, dateFormat string) {
+    return &DefaultFormatter{
         format:     format,
         dateFormat: dateFormat,
     }
 }
 
-func (self *Formatter) FormatTime(record *LogRecord) string {
+func (self *DefaultFormatter) FormatTime(record *LogRecord) string {
     // TODO don't known how to do a python like `time.strftime()' here
     // for record.Created.
     return ""
 }
 
-func (self *Formatter) Format(record *LogRecord) string {
+func (self *DefaultFormatter) Format(record *LogRecord) string {
     record.Message = record.GetMessage()
     if strings.Index(self.fmt, "%(asctime)s") == -1 {
         record.AscTime = self.FormatTime(record)
