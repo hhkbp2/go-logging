@@ -11,6 +11,7 @@ type LogRecord struct {
     Name     string
     Level    LogLevelType
     PathName string
+    FileName string
     LineNo   uint32
     Message  string
     Args     interface{}
@@ -20,6 +21,7 @@ func NewLogRecord(
     name string,
     level LogLevelType,
     pathName string,
+    fileName string,
     lineNo uint32,
     message string,
     args interface{}) *LogRecord {
@@ -29,6 +31,7 @@ func NewLogRecord(
         Name:        name,
         Level:       level,
         PathName:    pathName,
+        FileName:    fileName,
         LineNo:      lineNo,
         Message:     message,
         Args:        args,

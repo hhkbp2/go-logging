@@ -8,17 +8,17 @@ type Filter interface {
     Filter(record *LogRecord) bool
 }
 
-type DefaultFilter struct {
+type NameFilter struct {
     name string
 }
 
-func NewDefaultFilter(name string) *DefaultFilter {
-    return &DefaultFilter{
+func NewNameFilter(name string) *NameFilter {
+    return &NameFilter{
         name: name,
     }
 }
 
-func (self *DefaultFilter) Filter(record *LogRecord) bool {
+func (self *NameFilter) Filter(record *LogRecord) bool {
     length := len(self.name)
     if length == 0 {
         return true
@@ -32,6 +32,7 @@ func (self *DefaultFilter) Filter(record *LogRecord) bool {
 
 type Filterer struct {
     filters mapset.Set
+    lock    sync.RWMutex
 }
 
 func NewFilterer() *Filterer {
@@ -41,18 +42,24 @@ func NewFilterer() *Filterer {
 }
 
 func (self *Filterer) AddFilter(filter Filter) {
+    self.lock.Lock()
+    defer self.lock.Unlock()
     if !self.filters.Contains(filter) {
         self.filters.Add(filter)
     }
 }
 
 func (self *Filterer) RemoveFilter(filter Filter) {
+    self.lock.Lock()
+    defer self.lock.Unlock()
     if self.filters.Contains(filter) {
         self.filters.Remove(filter)
     }
 }
 
 func (self *Filterer) Filter(record *LogRecord) int {
+    self.lock.RLock()
+    defer self.lock.RUnlock()
     recordVote = 1
     for filter := range self.filters {
         if !filter.Filter(record) {

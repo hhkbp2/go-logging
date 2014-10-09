@@ -5,18 +5,6 @@ import (
     "time"
 )
 
-// supported attributes:
-// %(name)s
-// %(levelno)d
-// %(levelName)f
-// %(pathname)s
-// %(filename)s
-// %(module)s
-// %(lineno)d
-// %(created)d
-// %(asctime)s
-// %(message)s
-
 var (
     allSupportFormatAttributes = []string{
         "%(name)s",
@@ -24,7 +12,6 @@ var (
         "%(levelName)f",
         "%(pathname)s",
         "%(filename)s",
-        "%(module)s",
         "%(lineno)d",
         "%(created)d",
         "%(asctime)s",
@@ -57,29 +44,35 @@ func AttrOfRecord(i int, record *LogRecord) string {
     }
 }
 
+var (
+    defaultFormat     = "%(message)s"
+    defaultDateFormat = "%Y-%m-%d %H:%M:%S"
+    defaultFormatter  = NewStandardFormatter(defaultFormat, defautDateFormat)
+)
+
 type Formatter interface {
     Format(record *LogRecord) string
 }
 
-type DefaultFormatter struct {
+type StandardFormatter struct {
     format     string
     dateFormat string
 }
 
-func NewDefaultFormatter(format string, dateFormat string) {
-    return &DefaultFormatter{
+func NewStandardFormatter(format string, dateFormat string) {
+    return &StandardFormatter{
         format:     format,
         dateFormat: dateFormat,
     }
 }
 
-func (self *DefaultFormatter) FormatTime(record *LogRecord) string {
+func (self *StandardFormatter) FormatTime(record *LogRecord) string {
     // TODO don't known how to do a python like `time.strftime()' here
     // for record.Created.
     return ""
 }
 
-func (self *DefaultFormatter) Format(record *LogRecord) string {
+func (self *StandardFormatter) Format(record *LogRecord) string {
     record.Message = record.GetMessage()
     if strings.Index(self.fmt, "%(asctime)s") == -1 {
         record.AscTime = self.FormatTime(record)
