@@ -1,23 +1,27 @@
 package logging
 
-import ()
+import (
+    "sync"
+)
 
 var (
-    handlers     = make(map[string]Handler)
-    handlersLock sync.RWMutex
+    handlers      = make(map[string]Handler)
+    handlersMutex sync.RWMutex
 )
 
 func handlersLock() {
-    handlersLock.Lock()
+    handlersMutex.Lock()
 }
 
 func handlersUnlock() {
-    handlersLock.Unlock()
+    handlersMutex.Unlock()
 }
 
 type Handler interface {
     GetName() string
     SetName(name string)
+    GetLevel() LogLevelType
+    SetLevel(level LogLevelType) error
     SetFormatter(formater Formatter)
     Lock()
     Unlock()
@@ -32,9 +36,9 @@ type Handler interface {
 type BaseHandler struct {
     // TODO add impl
     *Filterer
-    Name      string
-    Level     LogLevelType
-    Formatter Formatter
+    name      string
+    level     LogLevelType
+    formatter Formatter
 
     lock sync.RWMutex
 }
@@ -42,32 +46,45 @@ type BaseHandler struct {
 func NewBaseHandler(name string, level LogLevelType) *BaseHandler {
     return &BaseHandler{
         Filterer:  NewFilterer(),
-        Name:      name,
-        Level:     level,
-        Formatter: nil,
+        name:      name,
+        level:     level,
+        formatter: nil,
     }
 }
 
-func (self *BaseHandler) GetName() {
-    return self.Name
+func (self *BaseHandler) GetName() string {
+    return self.name
 }
 
-func (self *BaseHandler) SetName(name string) {
+func (self *BaseHandler) SetName(name string, handler Handler) {
     handlersLock()
     defer handlersUnlock()
     if len(self.name) > 0 {
-        if handler, ok := handlers[self.name]; ok {
+        if _, ok := handlers[self.name]; ok {
             delete(handlers, self.name)
         }
     }
-    self.name = name
+    handler.SetName(name)
     if len(name) > 0 {
-        handlers[name] = self
+        handlers[name] = handler
     }
 }
 
+func (self *BaseHandler) GetLevel() LogLevelType {
+    return self.level
+}
+
+func (self *BaseHandler) SetLevel(level LogLevelType) error {
+    _, ok := getLevelName(level)
+    if !ok {
+        return ErrorNoSuchLevel
+    }
+    self.level = level
+    return nil
+}
+
 func (self *BaseHandler) SetFormatter(formatter Formatter) {
-    self.Formatter = formatter
+    self.formatter = formatter
 }
 
 func (self *BaseHandler) Lock() {
@@ -80,8 +97,8 @@ func (self *BaseHandler) Unlock() {
 
 func (self *BaseHandler) Format(record *LogRecord) string {
     var formatter Formatter
-    if self.Formatter {
-        formatter = self.Formatter
+    if self.formatter != nil {
+        formatter = self.formatter
     } else {
         formatter = defaultFormatter
     }
@@ -90,23 +107,22 @@ func (self *BaseHandler) Format(record *LogRecord) string {
 
 func (self *BaseHandler) Handle(handler Handler, record *LogRecord) int {
     rv := self.Filter(record)
-    if rv {
+    if rv > 0 {
         self.Lock()
         defer self.Unlock()
-        handler.Emit(record)
+        err := handler.Emit(record)
+        if err != nil {
+            handler.HandleError(record, err)
+        }
     }
     return rv
-}
-
-func (self *BaseHandler) HandleError(record *LogRecord, err error) {
-    // TODO add impl
 }
 
 func (self *BaseHandler) Close() {
     handlersLock()
     defer handlersUnlock()
     if len(self.name) > 0 {
-        handler, ok := handlers[self.name]
+        _, ok := handlers[self.name]
         if ok {
             delete(handlers, self.name)
         }

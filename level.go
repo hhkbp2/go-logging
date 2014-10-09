@@ -7,32 +7,32 @@ import (
 type LogLevelType uint8
 
 const (
-    Critical LogLevelType = 50
-    Fatal                 = Critical
-    Error                 = 40
-    Warning               = 30
-    Warn                  = Warning
-    Info                  = 20
-    Debug                 = 10
-    Notset                = 0
+    LevelCritical LogLevelType = 50
+    LevelFatal                 = LevelCritical
+    LevelError                 = 40
+    LevelWarning               = 30
+    LevelWarn                  = LevelWarning
+    LevelInfo                  = 20
+    LevelDebug                 = 10
+    LevelNotset                = 0
 )
 
 var (
     levelToNames = map[LogLevelType]string{
-        Fatal:  "FATAL",
-        Error:  "ERROR",
-        Warn:   "WARN",
-        Info:   "INFO",
-        Debug:  "DEBUG",
-        Notset: "NOTSET",
+        LevelFatal:  "FATAL",
+        LevelError:  "ERROR",
+        LevelWarn:   "WARN",
+        LevelInfo:   "INFO",
+        LevelDebug:  "DEBUG",
+        LevelNotset: "NOTSET",
     }
     nameToLevels = map[string]LogLevelType{
-        "FATAL":  Fatal,
-        "ERROR":  Error,
-        "WARN":   Warn,
-        "INFO":   Info,
-        "DEBUG":  Debug,
-        "NOTSET": Notset,
+        "FATAL":  LevelFatal,
+        "ERROR":  LevelError,
+        "WARN":   LevelWarn,
+        "INFO":   LevelInfo,
+        "DEBUG":  LevelDebug,
+        "NOTSET": LevelNotset,
     }
     levelLock sync.RWMutex
 )
@@ -40,10 +40,19 @@ var (
 func getLevelName(level LogLevelType) (name string, ok bool) {
     levelLock.RLock()
     defer levelLock.RUnlock()
-    return levelToNames[level]
+    levelName, ok := levelToNames[level]
+    return levelName, ok
 }
 
-func addLevel(level LogLevelType, levelName string) error {
+func GetLevelName(level LogLevelType) (name string) {
+    name, ok := getLevelName(level)
+    if !ok {
+        return "UNKNOWN"
+    }
+    return name
+}
+
+func AddLevel(level LogLevelType, levelName string) {
     levelLock.Lock()
     defer levelLock.Unlock()
     levelToNames[level] = levelName

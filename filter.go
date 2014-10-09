@@ -2,6 +2,8 @@ package logging
 
 import (
     "github.com/deckarep/golang-set"
+    "strings"
+    "sync"
 )
 
 type Filter interface {
@@ -60,12 +62,24 @@ func (self *Filterer) RemoveFilter(filter Filter) {
 func (self *Filterer) Filter(record *LogRecord) int {
     self.lock.RLock()
     defer self.lock.RUnlock()
-    recordVote = 1
-    for filter := range self.filters {
+    recordVote := 1
+    for i := range self.filters.Iter() {
+        filter, _ := i.(Filter)
         if !filter.Filter(record) {
             recordVote = 0
             break
         }
     }
     return recordVote
+}
+
+func (self *Filterer) GetFilters() []Filter {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    result := make([]Filter, 0, self.filters.Cardinality())
+    for i := range self.filters.Iter() {
+        filter, _ := i.(Filter)
+        result = append(result, filter)
+    }
+    return result
 }

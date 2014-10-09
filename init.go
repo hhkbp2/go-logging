@@ -1,7 +1,7 @@
 package logging
 
 var (
-    root    = NewRootLogger(Warn)
+    root    = NewRootLogger(LevelWarn)
     manager = NewManager(root)
 )
 
@@ -43,7 +43,7 @@ func Shutdown() {
     ShutdownHandlers(handlers)
 }
 func ShutdownHandlers(handlers map[string]Handler) {
-    for handler := range handlers {
+    for _, handler := range handlers {
         handler.Lock()
         defer handler.Unlock()
         handler.Flush()

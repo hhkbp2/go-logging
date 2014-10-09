@@ -1,7 +1,9 @@
 package logging
 
 import (
+    "errors"
     "github.com/deckarep/golang-set"
+    "strings"
     "sync"
 )
 
@@ -19,42 +21,15 @@ const (
 
 type Node interface {
     Type() NodeType
-    GetParent() Node
-    SetParent(node Node)
-}
-
-type BaseNode struct {
-    parent Node
-    lock   sync.RWMutex
-}
-
-func NewBaseNode() *BaseNode {
-    return &BaseNode{
-        parent: nil,
-    }
-}
-
-func (self *BaseNode) GetParent() Node {
-    self.lock.Rlock()
-    defer self.lock.RUnlock()
-    return self.parent
-}
-
-func (self *BaseNode) SetParent(node Node) {
-    self.lock.Lock()
-    defer self.lock.Unlock()
-    self.parent = node
 }
 
 type PlaceHolder struct {
-    *BaseNode
     Loggers mapset.Set
 }
 
 func NewPlaceHolder(logger Logger) *PlaceHolder {
     object := &PlaceHolder{
-        BaseNode: NewBaseNode(),
-        Loggers:  mapset.NewThreadUnsafeSet(),
+        Loggers: mapset.NewThreadUnsafeSet(),
     }
     object.Append(logger)
     return object
@@ -77,8 +52,8 @@ type Logger interface {
     GetPropagate() bool
     SetPropagate(v bool)
     GetLevel() LogLevelType
-    SetLevel(level LogLevelType)
-    IsEnableFor(level LogLevelType) bool
+    SetLevel(level LogLevelType) error
+    IsEnabledFor(level LogLevelType) bool
     GetEffectiveLevel() LogLevelType
 
     Fatal(format string, args ...interface{})
@@ -90,19 +65,22 @@ type Logger interface {
 
     AddHandler(handler Handler)
     RemoveHandler(handler Handler)
+    GetHandlers() []Handler
     AddFilter(filter Filter)
     RemoveFilter(filter Filter)
+    GetFilters() []Filter
 
     GetManager() *Manager
     SetManager(manager *Manager)
+    GetParent() Logger
+    SetParent(parent Logger)
 }
 
 type StandardLogger struct {
-    *BaseNode
     *Filterer
     name      string
     level     LogLevelType
-    parent    Node
+    parent    Logger
     propagate bool
     handlers  mapset.Set
     manager   *Manager
@@ -111,13 +89,12 @@ type StandardLogger struct {
 
 func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
     return &StandardLogger{
-        BaseNode:  NewBaseNode(),
-        Filterer:  NewDefaultFilterer(),
+        Filterer:  NewFilterer(),
+        parent:    nil,
         name:      name,
         level:     level,
-        parent:    nil,
         propagate: true,
-        handlers:  mapset.NewThreadSafeSet(),
+        handlers:  mapset.NewSet(),
         manager:   nil,
     }
 }
@@ -151,7 +128,7 @@ func (self *StandardLogger) GetLevel() LogLevelType {
 }
 
 func (self *StandardLogger) SetLevel(level LogLevelType) error {
-    levelName, ok = getLevelName(level)
+    _, ok := getLevelName(level)
     if !ok {
         return ErrorNoSuchLevel
     }
@@ -168,43 +145,44 @@ func (self *StandardLogger) IsEnabledFor(level LogLevelType) bool {
 func (self *StandardLogger) GetEffectiveLevel() LogLevelType {
     self.lock.RLock()
     defer self.lock.RUnlock()
-    logger := self
+    var logger Logger = self
     for logger != nil {
-        if logger.level != Notset {
-            return logger.level
+        level := logger.GetLevel()
+        if level != LevelNotset {
+            return level
         }
-        logger = logger.parent
+        logger = logger.GetParent()
     }
-    return Notset
+    return LevelNotset
 }
 
 func (self *StandardLogger) Fatal(format string, args ...interface{}) {
-    if self.IsEnabledFor(Fatal) {
-        self.log(Fatal, format, args...)
+    if self.IsEnabledFor(LevelFatal) {
+        self.log(LevelFatal, format, args...)
     }
 }
 
 func (self *StandardLogger) Error(format string, args ...interface{}) {
-    if self.IsEnabledFor(Error) {
-        self.log(Error, format, args...)
+    if self.IsEnabledFor(LevelError) {
+        self.log(LevelError, format, args...)
     }
 }
 
 func (self *StandardLogger) Warn(format string, args ...interface{}) {
-    if self.IsEnabledFor(Warn) {
-        self.log(Warn, format, args...)
+    if self.IsEnabledFor(LevelWarn) {
+        self.log(LevelWarn, format, args...)
     }
 }
 
 func (self *StandardLogger) Info(format string, args ...interface{}) {
-    if self.IsEnabledFor(Info) {
-        self.log(Info, format, args...)
+    if self.IsEnabledFor(LevelInfo) {
+        self.log(LevelInfo, format, args...)
     }
 }
 
 func (self *StandardLogger) Debug(format string, args ...interface{}) {
-    if self.IsEnabledFor(Debug) {
-        self.log(Debug, format, args...)
+    if self.IsEnabledFor(LevelDebug) {
+        self.log(LevelDebug, format, args...)
     }
 }
 
@@ -221,8 +199,10 @@ func (self *StandardLogger) log(
 
     // TODO get pathName and lineNo
     pathName := ""
-    lineNo := 0
-    record = NewLogRecord(self.name, level, pathName, lineNo, format, args)
+    fileName := ""
+    lineNo := uint32(0)
+    record := NewLogRecord(
+        self.name, level, pathName, fileName, lineNo, format, args)
     self.Handle(record)
 }
 
@@ -235,19 +215,19 @@ func (self *StandardLogger) Handle(record *LogRecord) {
 func (self *StandardLogger) callHandlers(record *LogRecord) {
     self.lock.Lock()
     defer self.lock.Unlock()
-    call := self
+    var call Logger = self
     found := 0
     for call != nil {
-        for handler := range call.handlers {
+        for _, handler := range call.GetHandlers() {
             found += 1
-            if record.Level >= handler.Level {
+            if record.Level >= handler.GetLevel() {
                 handler.Handle(record)
             }
         }
-        if !c.propagate {
-            c = nil
+        if !call.GetPropagate() {
+            call = nil
         } else {
-            c = c.parent
+            call = call.GetParent()
         }
     }
 }
@@ -268,6 +248,17 @@ func (self *StandardLogger) RemoveHandler(handler Handler) {
     }
 }
 
+func (self *StandardLogger) GetHandlers() []Handler {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    result := make([]Handler, 0, self.handlers.Cardinality())
+    for i := range self.handlers.Iter() {
+        handler, _ := i.(Handler)
+        result = append(result, handler)
+    }
+    return result
+}
+
 func (self *StandardLogger) GetManager() *Manager {
     self.lock.RLock()
     defer self.lock.RUnlock()
@@ -278,6 +269,18 @@ func (self *StandardLogger) SetManager(manager *Manager) {
     self.lock.Lock()
     defer self.lock.Unlock()
     self.manager = manager
+}
+
+func (self *StandardLogger) GetParent() Logger {
+    self.lock.RLock()
+    defer self.lock.RUnlock()
+    return self.parent
+}
+
+func (self *StandardLogger) SetParent(parent Logger) {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    self.parent = parent
 }
 
 type RootLogger struct {
@@ -293,7 +296,7 @@ func NewRootLogger(level LogLevelType) *RootLogger {
 type LoggerMaker func(name string) Logger
 
 func defaultLoggerMaker(name string) Logger {
-    return NewStandardLogger(name, Notset)
+    return NewStandardLogger(name, LevelNotset)
 }
 
 type Manager struct {
@@ -305,9 +308,9 @@ type Manager struct {
 
 func NewManager(logger Logger) *Manager {
     return &Manager{
-        root:            logger,
-        loggers:         make(map[string]Node),
-        loggerGenerator: defaultLoggerGenerator,
+        root:        logger,
+        loggers:     make(map[string]Node),
+        loggerMaker: defaultLoggerMaker,
     }
 }
 
@@ -318,8 +321,8 @@ func (self *Manager) SetLoggerMaker(maker LoggerMaker) {
 }
 
 func (self *Manager) GetLogger(name string) Logger {
-    lock.Lock()
-    defer lock.Unlock()
+    self.lock.Lock()
+    defer self.lock.Unlock()
     var logger Logger
     node, ok := self.loggers[name]
     if ok {
@@ -345,10 +348,10 @@ func (self *Manager) GetLogger(name string) Logger {
     return logger
 }
 
-func (self *StandardLogger) fixupParents(logger Logger) {
+func (self *Manager) fixupParents(logger Logger) {
     name := logger.GetName()
     index := strings.LastIndex(name, ".")
-    var parent Node
+    var parent Logger
     if (index > 0) && (parent == nil) {
         parentStr := name[:index]
         node, ok := self.loggers[name]
@@ -373,12 +376,11 @@ func (self *StandardLogger) fixupParents(logger Logger) {
     logger.SetParent(parent)
 }
 
-func (self *StandardLogger) fixupChildren(
-    placeHolder *PlaceHolder, logger Logger) {
-
+func (self *Manager) fixupChildren(placeHolder *PlaceHolder, logger Logger) {
     name := logger.GetName()
-    for l := range placeHolder.Loggers.Iter() {
-        parent, _ := l.GetParent().(*Logger)
+    for i := range placeHolder.Loggers.Iter() {
+        l, _ := i.(Logger)
+        parent := l.GetParent()
         if !strings.HasPrefix(parent.GetName(), name) {
             logger.SetParent(parent)
             l.SetParent(logger)

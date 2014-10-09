@@ -1,8 +1,10 @@
 package logging
 
 import (
+    "bytes"
+    "fmt"
     "strings"
-    "time"
+    "unicode/utf8"
 )
 
 var (
@@ -20,34 +22,34 @@ var (
 )
 
 func AttrOfRecord(i int, record *LogRecord) string {
-    switch j {
+    switch i {
     case 0:
         return record.Name
     case 1:
         return fmt.Sprintf("%d", record.Level)
     case 2:
-        return getLevelName(record.Level)
+        return GetLevelName(record.Level)
     case 3:
         return record.PathName
     case 4:
-        return record.Filename
+        return record.FileName
     case 5:
-        return record.Module
-    case 6:
         return fmt.Sprintf("%d", record.LineNo)
+    case 6:
+        return record.CreatedTime.String()
     case 7:
-        return fmt.Sprintf("%d", int64(record.CreatedTime))
-    case 8:
         return record.AscTime
-    case 9:
+    case 8:
         return record.Message
+    default:
+        panic("unsupport format attribute")
     }
 }
 
 var (
     defaultFormat     = "%(message)s"
     defaultDateFormat = "%Y-%m-%d %H:%M:%S"
-    defaultFormatter  = NewStandardFormatter(defaultFormat, defautDateFormat)
+    defaultFormatter  = NewStandardFormatter(defaultFormat, defaultDateFormat)
 )
 
 type Formatter interface {
@@ -59,7 +61,7 @@ type StandardFormatter struct {
     dateFormat string
 }
 
-func NewStandardFormatter(format string, dateFormat string) {
+func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
     return &StandardFormatter{
         format:     format,
         dateFormat: dateFormat,
@@ -74,7 +76,7 @@ func (self *StandardFormatter) FormatTime(record *LogRecord) string {
 
 func (self *StandardFormatter) Format(record *LogRecord) string {
     record.Message = record.GetMessage()
-    if strings.Index(self.fmt, "%(asctime)s") == -1 {
+    if strings.Index(self.format, "%(asctime)s") == -1 {
         record.AscTime = self.FormatTime(record)
     }
     return Format(self.format, record)
@@ -98,7 +100,7 @@ func Format(format string, record *LogRecord) string {
 
         // process on double %
         i++
-        c, w := utf8.DecodeRuneInString(format[i:])
+        c, _ := utf8.DecodeRuneInString(format[i:])
         if c == '%' {
             buf.WriteByte('%')
             continue
@@ -113,7 +115,7 @@ func Format(format string, record *LogRecord) string {
                 }
                 str := format[i:attrEnd]
                 attr := allSupportFormatAttributes[j]
-                if bytes.Compare(str, attr) == 0 {
+                if str == attr {
                     buf.WriteString(AttrOfRecord(j, record))
                     i = attrEnd
                     break

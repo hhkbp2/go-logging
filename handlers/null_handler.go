@@ -14,7 +14,3 @@ func (self *NullHandler) Handle(_ *logging.LogRecord) {
 func (self *NullHandler) Emit(_ *logging.LogRecord) {
     // Do nothing
 }
-
-func (self *NullHandler) CreateLock() {
-    // Do nothing
-}

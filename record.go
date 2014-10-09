@@ -1,6 +1,7 @@
 package logging
 
 import (
+    "fmt"
     "time"
 )
 
@@ -14,7 +15,7 @@ type LogRecord struct {
     FileName string
     LineNo   uint32
     Message  string
-    Args     interface{}
+    Args     []interface{}
 }
 
 func NewLogRecord(
@@ -24,7 +25,7 @@ func NewLogRecord(
     fileName string,
     lineNo uint32,
     message string,
-    args interface{}) *LogRecord {
+    args []interface{}) *LogRecord {
 
     return &LogRecord{
         CreatedTime: time.Now(),
@@ -39,12 +40,12 @@ func NewLogRecord(
 }
 
 func (self *LogRecord) String() string {
-    return fmt.Printf("<LogRecord: %s, %s, %s, %s, \"%s\">",
+    return fmt.Sprintf("<LogRecord: %s, %s, %s, %s, \"%s\">",
         self.Name, self.Level, self.PathName, self.LineNo, self.Message)
 }
 
 func (self *LogRecord) GetMessage() string {
-    if self.args {
+    if self.Args != nil {
         return fmt.Sprintf(self.Message, self.Args...)
     }
     return self.Message
