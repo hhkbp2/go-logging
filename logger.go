@@ -3,12 +3,18 @@ package logging
 import (
     "errors"
     "github.com/deckarep/golang-set"
+    "runtime"
     "strings"
     "sync"
 )
 
 var (
     ErrorNoSuchLevel = errors.New("no such level")
+)
+
+const (
+    thisPackageName = "go-logging"
+    thisFileName    = "logger.go"
 )
 
 type NodeType uint8
@@ -197,13 +203,54 @@ func (self *StandardLogger) Log(
 func (self *StandardLogger) log(
     level LogLevelType, format string, args ...interface{}) {
 
-    // TODO get pathName and lineNo
-    pathName := ""
-    fileName := ""
-    lineNo := uint32(0)
+    callerInfo := self.findCaller()
     record := NewLogRecord(
-        self.name, level, pathName, fileName, lineNo, format, args)
+        self.name,
+        level,
+        callerInfo.PathName,
+        callerInfo.FileName,
+        callerInfo.LineNo,
+        callerInfo.FuncName,
+        format,
+        args)
     self.Handle(record)
+}
+
+type CallerInfo struct {
+    PathName string
+    FileName string
+    LineNo   uint32
+    FuncName string
+}
+
+var (
+    UnknownCallerInfo = &CallerInfo{
+        PathName: "(unknown path)",
+        FileName: "(unknown file)",
+        LineNo:   0,
+        FuncName: "(unknown function)",
+    }
+)
+
+func (self *StandardLogger) findCaller() *CallerInfo {
+    for i := 1; ; i++ {
+        pc, filepath, line, ok := runtime.Caller(i)
+        if !ok {
+            return UnknownCallerInfo
+        }
+        parts := strings.Split(filepath, "/")
+        dir := parts[len(parts)-2]
+        file := parts[len(parts)-1]
+        if (dir != thisPackageName) || (file != thisFileName) {
+            funcName := runtime.FuncForPC(pc).Name()
+            return &CallerInfo{
+                PathName: filepath,
+                FileName: file,
+                LineNo:   uint32(line),
+                FuncName: funcName,
+            }
+        }
+    }
 }
 
 func (self *StandardLogger) Handle(record *LogRecord) {

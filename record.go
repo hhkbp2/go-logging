@@ -14,6 +14,7 @@ type LogRecord struct {
     PathName string
     FileName string
     LineNo   uint32
+    FuncName string
     Message  string
     Args     []interface{}
 }
@@ -24,6 +25,7 @@ func NewLogRecord(
     pathName string,
     fileName string,
     lineNo uint32,
+    funcName string,
     message string,
     args []interface{}) *LogRecord {
 
@@ -34,6 +36,7 @@ func NewLogRecord(
         PathName:    pathName,
         FileName:    fileName,
         LineNo:      lineNo,
+        FuncName:    funcName,
         Message:     message,
         Args:        args,
     }

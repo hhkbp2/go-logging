@@ -3,6 +3,7 @@ package logging
 import (
     "bytes"
     "fmt"
+    "github.com/hhkbp2/go-strftime"
     "strings"
     "unicode/utf8"
 )
@@ -48,7 +49,7 @@ func AttrOfRecord(i int, record *LogRecord) string {
 
 var (
     defaultFormat     = "%(message)s"
-    defaultDateFormat = "%Y-%m-%d %H:%M:%S"
+    defaultDateFormat = "%Y-%m-%d %H:%M:%S %3n"
     defaultFormatter  = NewStandardFormatter(defaultFormat, defaultDateFormat)
 )
 
@@ -69,9 +70,8 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 }
 
 func (self *StandardFormatter) FormatTime(record *LogRecord) string {
-    // TODO don't known how to do a python like `time.strftime()' here
-    // for record.Created.
-    return ""
+    // Use the library go-strftime to format the time record.Created.
+    return strftime.Format(self.dateFormat, record.CreatedTime)
 }
 
 func (self *StandardFormatter) Format(record *LogRecord) string {
