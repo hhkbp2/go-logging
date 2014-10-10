@@ -5,7 +5,7 @@ import (
 )
 
 type RotatingHandler interface {
-    ShouldRollover(record *LogRecord) bool
+    ShouldRollover(record *logging.LogRecord) bool
     DoRollover()
 }
 
@@ -17,9 +17,11 @@ func NewBaseRotatingHandler(filepath string, mode int) *BaseRotatingHandler {
     return &BaseRotatingHandler{}
 }
 
-func (self *BaseRotatingHandler) Emit(record *LogRecord) {
-    if self.ShouldRollover(record) {
-        self.DoRollover()
+func (self *BaseRotatingHandler) Emit(
+    handler RotatingHandler, record *logging.LogRecord) {
+
+    if handler.ShouldRollover(record) {
+        handler.DoRollover()
     }
     if err := self.FileHandler.Emit(record); err != nil {
         self.HandleError(record, err)
@@ -40,8 +42,9 @@ func NewRotatingFileHandler(
     return &RotatingFileHandler{}
 }
 
-func (self *RotatingFileHandler) ShouldRollover(record *LogRecord) bool {
+func (self *RotatingFileHandler) ShouldRollover(record *logging.LogRecord) bool {
     // TODO add impl
+    return false
 }
 
 func (self *RotatingFileHandler) DoRollover() {

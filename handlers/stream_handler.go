@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "fmt"
     "github.com/hhkbp2/go-logging"
 )
 
@@ -10,24 +11,26 @@ type Stream interface {
 }
 
 type StreamHandler struct {
-    *DefaultHandler
+    *logging.BaseHandler
     stream Stream
 }
 
-func NewStreamHandler(stream Stream) *StreamHandler {
+func NewStreamHandler(
+    name string, level logging.LogLevelType, stream Stream) *StreamHandler {
+
     return &StreamHandler{
-        DefaultHandler: NewDefaultHandler(),
-        stream:         stream,
+        BaseHandler: logging.NewBaseHandler(name, level),
+        stream:      stream,
     }
 }
 
-func (self *StreamHandler) Flush() {
-    self.Acquire()
-    defer self.Release()
-    self.stream.Flush()
+func (self *StreamHandler) Flush() error {
+    self.Lock()
+    defer self.Unlock()
+    return self.stream.Flush()
 }
 
-func (self *StreamHandler) Emit(record *LogRecord) {
+func (self *StreamHandler) Emit(record *logging.LogRecord) error {
     message := self.Format(record)
     stream := self.stream
     err := stream.Write(fmt.Sprintf("%s\n", message))
@@ -37,4 +40,5 @@ func (self *StreamHandler) Emit(record *LogRecord) {
     if err = self.Flush(); err != nil {
         self.HandleError(record, err)
     }
+    return err
 }
