@@ -38,15 +38,5 @@ func Log(level LogLevelType, format string, args ...interface{}) {
 }
 
 func Shutdown() {
-    handlersLock()
-    defer handlersUnlock()
-    ShutdownHandlers(handlers)
-}
-func ShutdownHandlers(handlers map[string]Handler) {
-    for _, handler := range handlers {
-        handler.Lock()
-        defer handler.Unlock()
-        handler.Flush()
-        handler.Close()
-    }
+    // TODO shutdown every logger in manager
 }

@@ -37,6 +37,10 @@ var (
     levelLock sync.RWMutex
 )
 
+func (level LogLevelType) String() string {
+    return GetLevelName(level)
+}
+
 func getLevelName(level LogLevelType) (name string, ok bool) {
     levelLock.RLock()
     defer levelLock.RUnlock()

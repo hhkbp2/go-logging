@@ -213,13 +213,9 @@ func (self *StandardLogger) Handle(record *LogRecord) {
 }
 
 func (self *StandardLogger) callHandlers(record *LogRecord) {
-    self.lock.Lock()
-    defer self.lock.Unlock()
     var call Logger = self
-    found := 0
     for call != nil {
         for _, handler := range call.GetHandlers() {
-            found += 1
             if record.Level >= handler.GetLevel() {
                 handler.Handle(record)
             }
@@ -249,8 +245,8 @@ func (self *StandardLogger) RemoveHandler(handler Handler) {
 }
 
 func (self *StandardLogger) GetHandlers() []Handler {
-    self.lock.Lock()
-    defer self.lock.Unlock()
+    self.lock.RLock()
+    defer self.lock.RUnlock()
     result := make([]Handler, 0, self.handlers.Cardinality())
     for i := range self.handlers.Iter() {
         handler, _ := i.(Handler)
@@ -288,8 +284,10 @@ type RootLogger struct {
 }
 
 func NewRootLogger(level LogLevelType) *RootLogger {
+    logger := NewStandardLogger("root", level)
+    logger.SetPropagate(false)
     return &RootLogger{
-        StandardLogger: NewStandardLogger("root", level),
+        StandardLogger: logger,
     }
 }
 
