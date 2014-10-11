@@ -32,18 +32,24 @@ func (self *NameFilter) Filter(record *LogRecord) bool {
     return (record.Name[length] == '.')
 }
 
-type Filterer struct {
+type Filterer interface {
+    AddFilter(filter Filter)
+    RemoveFilter(filter Filter)
+    Filter(record *LogRecord) int
+}
+
+type StandardFilterer struct {
     filters mapset.Set
     lock    sync.RWMutex
 }
 
-func NewFilterer() *Filterer {
-    return &Filterer{
+func NewStandardFilterer() *StandardFilterer {
+    return &StandardFilterer{
         filters: mapset.NewThreadUnsafeSet(),
     }
 }
 
-func (self *Filterer) AddFilter(filter Filter) {
+func (self *StandardFilterer) AddFilter(filter Filter) {
     self.lock.Lock()
     defer self.lock.Unlock()
     if !self.filters.Contains(filter) {
@@ -51,7 +57,7 @@ func (self *Filterer) AddFilter(filter Filter) {
     }
 }
 
-func (self *Filterer) RemoveFilter(filter Filter) {
+func (self *StandardFilterer) RemoveFilter(filter Filter) {
     self.lock.Lock()
     defer self.lock.Unlock()
     if self.filters.Contains(filter) {
@@ -59,7 +65,7 @@ func (self *Filterer) RemoveFilter(filter Filter) {
     }
 }
 
-func (self *Filterer) Filter(record *LogRecord) int {
+func (self *StandardFilterer) Filter(record *LogRecord) int {
     self.lock.RLock()
     defer self.lock.RUnlock()
     recordVote := 1
@@ -73,7 +79,7 @@ func (self *Filterer) Filter(record *LogRecord) int {
     return recordVote
 }
 
-func (self *Filterer) GetFilters() []Filter {
+func (self *StandardFilterer) GetFilters() []Filter {
     self.lock.Lock()
     defer self.lock.Unlock()
     result := make([]Filter, 0, self.filters.Cardinality())

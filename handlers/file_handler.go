@@ -89,6 +89,5 @@ func (self *FileHandler) Handle(record *logging.LogRecord) int {
 }
 
 func (self *FileHandler) Close() {
-    self.Flush()
-    self.StreamHandler.GetStream().Close()
+    self.StreamHandler.Close()
 }

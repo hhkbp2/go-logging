@@ -83,7 +83,7 @@ type Logger interface {
 }
 
 type StandardLogger struct {
-    *Filterer
+    *StandardFilterer
     name      string
     level     LogLevelType
     parent    Logger
@@ -95,13 +95,13 @@ type StandardLogger struct {
 
 func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
     return &StandardLogger{
-        Filterer:  NewFilterer(),
-        parent:    nil,
-        name:      name,
-        level:     level,
-        propagate: true,
-        handlers:  mapset.NewSet(),
-        manager:   nil,
+        StandardFilterer: NewStandardFilterer(),
+        parent:           nil,
+        name:             name,
+        level:            level,
+        propagate:        true,
+        handlers:         mapset.NewSet(),
+        manager:          nil,
     }
 }
 

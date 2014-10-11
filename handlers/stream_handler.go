@@ -34,10 +34,6 @@ func (self *StreamHandler) SetStream(s Stream) {
     self.stream = s
 }
 
-func (self *StreamHandler) Flush() error {
-    return self.stream.Flush()
-}
-
 func (self *StreamHandler) Emit(record *logging.LogRecord) error {
     return self.Emit2(self, record)
 }
@@ -57,4 +53,12 @@ func (self *StreamHandler) Emit2(
 
 func (self *StreamHandler) Handle(record *logging.LogRecord) int {
     return self.BaseHandler.Handle2(self, record)
+}
+
+func (self *StreamHandler) Flush() error {
+    return self.stream.Flush()
+}
+
+func (self *StreamHandler) Close() {
+    self.stream.Close()
 }

@@ -5,16 +5,16 @@ import (
 )
 
 type Handler interface {
-    Formatter
-    Filter(record *LogRecord) int
-
     GetName() string
     SetName(name string)
     GetLevel() LogLevelType
     SetLevel(level LogLevelType) error
+
+    Formatter
     SetFormatter(formater Formatter)
-    Lock()
-    Unlock()
+
+    Filterer
+
     Emit(record *LogRecord) error
     Handle(record *LogRecord) int
     HandleError(record *LogRecord, err error)
@@ -23,7 +23,7 @@ type Handler interface {
 }
 
 type BaseHandler struct {
-    *Filterer
+    *StandardFilterer
     name          string
     nameLock      sync.RWMutex
     level         LogLevelType
@@ -36,10 +36,10 @@ type BaseHandler struct {
 
 func NewBaseHandler(name string, level LogLevelType) *BaseHandler {
     return &BaseHandler{
-        Filterer:  NewFilterer(),
-        name:      name,
-        level:     level,
-        formatter: nil,
+        StandardFilterer: NewStandardFilterer(),
+        name:             name,
+        level:            level,
+        formatter:        nil,
     }
 }
 
@@ -101,8 +101,8 @@ func (self *BaseHandler) Format(record *LogRecord) string {
 func (self *BaseHandler) Handle2(handler Handler, record *LogRecord) int {
     rv := handler.Filter(record)
     if rv > 0 {
-        handler.Lock()
-        defer handler.Unlock()
+        self.Lock()
+        defer self.Unlock()
         err := handler.Emit(record)
         if err != nil {
             handler.HandleError(record, err)
