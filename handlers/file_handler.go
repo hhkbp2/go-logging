@@ -55,7 +55,11 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
 }
 
 func (self *FileHandler) Emit(record *logging.LogRecord) error {
-    return self.StreamHandler.Emit(record)
+    return self.StreamHandler.Emit2(self, record)
+}
+
+func (self *FileHandler) Handle(record *logging.LogRecord) int {
+    return self.Handle2(self, record)
 }
 
 func (self *FileHandler) Close() {

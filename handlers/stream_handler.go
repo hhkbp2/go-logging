@@ -25,20 +25,27 @@ func NewStreamHandler(
 }
 
 func (self *StreamHandler) Flush() error {
-    self.Lock()
-    defer self.Unlock()
     return self.stream.Flush()
 }
 
 func (self *StreamHandler) Emit(record *logging.LogRecord) error {
-    message := self.Format(record)
-    stream := self.stream
-    err := stream.Write(fmt.Sprintf("%s\n", message))
+    return self.Emit2(self, record)
+}
+
+func (self *StreamHandler) Emit2(
+    handler logging.Handler, record *logging.LogRecord) error {
+
+    message := handler.Format(record)
+    err := self.stream.Write(fmt.Sprintf("%s\n", message))
     if err != nil {
-        self.HandleError(record, err)
+        handler.HandleError(record, err)
     }
-    if err = self.Flush(); err != nil {
-        self.HandleError(record, err)
+    if err = handler.Flush(); err != nil {
+        handler.HandleError(record, err)
     }
     return err
+}
+
+func (self *StreamHandler) Handle(record *logging.LogRecord) int {
+    return self.BaseHandler.Handle2(self, record)
 }

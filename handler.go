@@ -6,6 +6,7 @@ import (
 
 type Handler interface {
     Formatter
+    Filter(record *LogRecord) int
 
     GetName() string
     SetName(name string)
@@ -97,8 +98,8 @@ func (self *BaseHandler) Format(record *LogRecord) string {
     return formatter.Format(record)
 }
 
-func (self *BaseHandler) Handle(handler Handler, record *LogRecord) int {
-    rv := self.Filter(record)
+func (self *BaseHandler) Handle2(handler Handler, record *LogRecord) int {
+    rv := handler.Filter(record)
     if rv > 0 {
         handler.Lock()
         defer handler.Unlock()
