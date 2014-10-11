@@ -26,7 +26,7 @@ func TestFileHandler(t *testing.T) {
     // then clean it up.
     content, err := ioutil.ReadFile(testFileName)
     require.Nil(t, err)
-    require.Equal(t, message, string(content))
+    require.Equal(t, message+"\n", string(content))
     err = os.Remove(testFileName)
     require.Nil(t, err)
 }

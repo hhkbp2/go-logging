@@ -10,6 +10,14 @@ type FileStream struct {
     File *os.File
 }
 
+func (self *FileStream) Tell() (int64, error) {
+    fileInfo, err := self.File.Stat()
+    if err != nil {
+        return 0, err
+    }
+    return fileInfo.Size(), nil
+}
+
 func (self *FileStream) Write(s string) error {
     length := len(s)
     for i := 0; i < length; {
@@ -27,6 +35,10 @@ func (self *FileStream) Flush() error {
     return self.File.Sync()
 }
 
+func (self *FileStream) Close() error {
+    return self.File.Close()
+}
+
 type FileHandler struct {
     *StreamHandler
 
@@ -39,19 +51,33 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
     if err != nil {
         return nil, err
     }
-    file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|mode, 0666)
-    if err != nil {
+    handler := NewStreamHandler(filepath, logging.LevelNotset, nil)
+    object := &FileHandler{
+        StreamHandler: handler,
+        filepath:      filepath,
+        mode:          mode,
+    }
+    if err = object.Open(); err != nil {
         return nil, err
+    }
+    return object, nil
+}
+
+func (self *FileHandler) GetFilePath() string {
+    return self.filepath
+}
+
+func (self *FileHandler) Open() error {
+    file, err := os.OpenFile(
+        self.filepath, os.O_WRONLY|os.O_CREATE|self.mode, 0666)
+    if err != nil {
+        return err
     }
     stream := &FileStream{
         File: file,
     }
-    object := &FileHandler{
-        StreamHandler: NewStreamHandler(filename, logging.LevelNotset, stream),
-        filepath:      filepath,
-        mode:          mode,
-    }
-    return object, nil
+    self.StreamHandler.SetStream(stream)
+    return nil
 }
 
 func (self *FileHandler) Emit(record *logging.LogRecord) error {
@@ -63,8 +89,6 @@ func (self *FileHandler) Handle(record *logging.LogRecord) int {
 }
 
 func (self *FileHandler) Close() {
-    self.Lock()
-    defer self.Unlock()
     self.Flush()
-    self.StreamHandler.Close()
+    self.StreamHandler.GetStream().Close()
 }
