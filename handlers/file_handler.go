@@ -31,7 +31,7 @@ func (self *FileStream) Write(s string) error {
 }
 
 func (self *FileStream) Flush() error {
-    // TODO temporarily sync to disk
+    // TODO to be optimized for performance
     return self.File.Sync()
 }
 
