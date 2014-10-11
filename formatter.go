@@ -4,47 +4,58 @@ import (
     "bytes"
     "fmt"
     "github.com/hhkbp2/go-strftime"
+    "regexp"
     "strings"
-    "unicode/utf8"
 )
+
+type ExtractAttr func(record *LogRecord) string
 
 var (
-    allSupportFormatAttributes = []string{
-        "%(name)s",
-        "%(levelno)d",
-        "%(levelName)f",
-        "%(pathname)s",
-        "%(filename)s",
-        "%(lineno)d",
-        "%(created)d",
-        "%(asctime)s",
-        "%(message)s",
+    attrToFunc = map[string]ExtractAttr{
+        "%(name)s": func(record *LogRecord) string {
+            return record.Name
+        },
+        "%(levelno)d": func(record *LogRecord) string {
+            return fmt.Sprintf("%d", record.Level)
+        },
+        "%(levelname)s": func(record *LogRecord) string {
+            return GetLevelName(record.Level)
+        },
+        "%(pathname)s": func(record *LogRecord) string {
+            return record.PathName
+        },
+        "%(filename)s": func(record *LogRecord) string {
+            return record.FileName
+        },
+        "%(lineno)d": func(record *LogRecord) string {
+            return fmt.Sprintf("%d", record.LineNo)
+        },
+        "%(funcname)s": func(record *LogRecord) string {
+            return record.FuncName
+        },
+        "%(created)d": func(record *LogRecord) string {
+            return fmt.Sprintf("%d", record.CreatedTime.UnixNano())
+        },
+        "%(asctime)s": func(record *LogRecord) string {
+            return record.AscTime
+        },
+        "%(message)s": func(record *LogRecord) string {
+            return record.Message
+        },
     }
+    formatRe *regexp.Regexp
 )
 
-func AttrOfRecord(i int, record *LogRecord) string {
-    switch i {
-    case 0:
-        return record.Name
-    case 1:
-        return fmt.Sprintf("%d", record.Level)
-    case 2:
-        return GetLevelName(record.Level)
-    case 3:
-        return record.PathName
-    case 4:
-        return record.FileName
-    case 5:
-        return fmt.Sprintf("%d", record.LineNo)
-    case 6:
-        return record.CreatedTime.String()
-    case 7:
-        return record.AscTime
-    case 8:
-        return record.Message
-    default:
-        panic("unsupport format attribute")
+func init() {
+    var buf bytes.Buffer
+    buf.WriteString("(%(?:%")
+    for attr, _ := range attrToFunc {
+        buf.WriteString("|")
+        buf.WriteString(regexp.QuoteMeta(attr[1:]))
     }
+    buf.WriteString("))")
+    re := buf.String()
+    formatRe = regexp.MustCompile(re)
 }
 
 var (
@@ -58,14 +69,20 @@ type Formatter interface {
 }
 
 type StandardFormatter struct {
-    format     string
-    dateFormat string
+    format       string
+    toFormatTime bool
+    dateFormat   string
 }
 
 func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
+    toFormatTime := false
+    if strings.Index(format, "%(asctime)s") > 0 {
+        toFormatTime = true
+    }
     return &StandardFormatter{
-        format:     format,
-        dateFormat: dateFormat,
+        format:       format,
+        toFormatTime: toFormatTime,
+        dateFormat:   dateFormat,
     }
 }
 
@@ -76,52 +93,27 @@ func (self *StandardFormatter) FormatTime(record *LogRecord) string {
 
 func (self *StandardFormatter) Format(record *LogRecord) string {
     record.Message = record.GetMessage()
-    if strings.Index(self.format, "%(asctime)s") == -1 {
+    if self.toFormatTime {
         record.AscTime = self.FormatTime(record)
     }
     return Format(self.format, record)
 }
 
-func Format(format string, record *LogRecord) string {
-    var buf bytes.Buffer
-    end := len(format)
-    for i := 0; i < end; {
-        lasti := i
-        for i < end && format[i] != '%' {
-            i++
-        }
-        if i > lasti {
-            buf.WriteString(format[lasti:i])
-        }
-        if i >= end {
-            // done processing format string
-            break
-        }
-
-        // process on double %
-        i++
-        c, _ := utf8.DecodeRuneInString(format[i:])
-        if c == '%' {
-            buf.WriteByte('%')
-            continue
-        }
-
-        if c == '(' {
-            attrLen := len(allSupportFormatAttributes)
-            for j := 0; j < attrLen; j++ {
-                attrEnd := i + len(allSupportFormatAttributes[j]) - 1
-                if attrEnd > end {
-                    break
-                }
-                str := format[i:attrEnd]
-                attr := allSupportFormatAttributes[j]
-                if str == attr {
-                    buf.WriteString(AttrOfRecord(j, record))
-                    i = attrEnd
-                    break
-                }
-            }
-        }
+func repl(match string, record *LogRecord) string {
+    if match == "%%" {
+        return "%"
     }
-    return buf.String()
+
+    extractFunc, ok := attrToFunc[match]
+    if ok {
+        return extractFunc(record)
+    }
+    return match
+}
+
+func Format(format string, record *LogRecord) string {
+    fn := func(match string) string {
+        return repl(match, record)
+    }
+    return formatRe.ReplaceAllStringFunc(format, fn)
 }

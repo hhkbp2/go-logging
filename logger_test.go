@@ -30,7 +30,7 @@ func (self *MockHandler) Emit(record *LogRecord) error {
 }
 
 func (self *MockHandler) Handle(record *LogRecord) int {
-    return self.BaseHandler.Handle(self, record)
+    return self.BaseHandler.Handle2(self, record)
 }
 
 func (self *MockHandler) HandleError(record *LogRecord, err error) {
