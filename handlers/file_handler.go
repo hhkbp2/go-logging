@@ -6,6 +6,7 @@ import (
     "path/filepath"
 )
 
+// A class wraps os.File to the stream interface.
 type FileStream struct {
     File *os.File
 }
@@ -39,6 +40,7 @@ func (self *FileStream) Close() error {
     return self.File.Close()
 }
 
+// A handler class which writes formatted logging records to disk files.
 type FileHandler struct {
     *StreamHandler
 
@@ -46,7 +48,10 @@ type FileHandler struct {
     mode     int
 }
 
+// Open the specified file and use it as the stream for logging.
 func NewFileHandler(filename string, mode int) (*FileHandler, error) {
+    // keep the absolute path, otherwise derived classes which use this
+    // may come a cropper when the current directory changes.
     filepath, err := filepath.Abs(filename)
     if err != nil {
         return nil, err
@@ -63,10 +68,14 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
     return object, nil
 }
 
+// Return the absolute path of logging file.
 func (self *FileHandler) GetFilePath() string {
     return self.filepath
 }
 
+// Open the current base file with the (original) mode and encoding,
+// and set it to the underlying stream handler.
+// Return non-nil error if error happens.
 func (self *FileHandler) Open() error {
     file, err := os.OpenFile(
         self.filepath, os.O_WRONLY|os.O_CREATE|self.mode, 0666)
@@ -80,6 +89,7 @@ func (self *FileHandler) Open() error {
     return nil
 }
 
+// Emit a record.
 func (self *FileHandler) Emit(record *logging.LogRecord) error {
     return self.StreamHandler.Emit2(self, record)
 }
@@ -88,6 +98,7 @@ func (self *FileHandler) Handle(record *logging.LogRecord) int {
     return self.Handle2(self, record)
 }
 
+// Close this file handler.
 func (self *FileHandler) Close() {
-    self.StreamHandler.Close()
+    self.StreamHandler.Close2()
 }

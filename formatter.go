@@ -77,10 +77,10 @@ type Formatter interface {
     Format(record *LogRecord) string
 }
 
-// The standard Formatter. It allows a formatting string to be specified.
+// The standard formatter. It allows a formatting string to be specified.
 // If none is supplied, the default value of "%(message)s" is used.
 //
-// The Formatter can be initialized with a format string which makes use of
+// The formatter can be initialized with a format string which makes use of
 // knowledge of the LogRecord attributes - e.g. the default value mentioned
 // above makes use of the fact that the user's message and arguments are
 // preformatted into a LogRecord's message attribute. Currently, the usefull
@@ -165,7 +165,7 @@ func Format(format string, record *LogRecord) string {
     return formatRe.ReplaceAllStringFunc(format, fn)
 }
 
-// A Formatter suitable for formatting a number of records.
+// A formatter suitable for formatting a number of records.
 type BufferingFormatter struct {
     lineFormatter Formatter
 }

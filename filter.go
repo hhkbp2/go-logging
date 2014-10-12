@@ -7,13 +7,13 @@ import (
 )
 
 // Filter interface is to perform arbitrary filtering of LogRecords.
-// Loggers and Handlers can optionally use Filter instances to filter records
+// Loggers and handlers can optionally use filter instances to filter records
 // as desired.
 type Filter interface {
     Filter(record *LogRecord) bool
 }
 
-// The base Filter allows events which are below a certain point in the logger
+// The base filter allows events which are below a certain point in the logger
 // hierarchy. For Example, a filter initialized with "A.B" will allow events
 // logged by loggers "A.B", "A.B.C", "A.B.C.D", "A.B.D" etc. but not "A.BB",
 // "B.A.B" etc. If initialized with the empty string, all events are passed.
@@ -46,7 +46,7 @@ func (self *NameFilter) Filter(record *LogRecord) bool {
     return (record.Name[length] == '.')
 }
 
-// An interface for managing Filters.
+// An interface for managing filters.
 type Filterer interface {
     AddFilter(filter Filter)
     RemoveFilter(filter Filter)
@@ -54,20 +54,20 @@ type Filterer interface {
 }
 
 // An base class for loggers and handlers which allows them to share common code
-// of managing the Filters.
+// of managing the filters.
 type StandardFilterer struct {
     filters mapset.Set
     lock    sync.RWMutex
 }
 
-// Initialize the standard Filterer, with no Filter.
+// Initialize the standard filterer, with no filter.
 func NewStandardFilterer() *StandardFilterer {
     return &StandardFilterer{
         filters: mapset.NewThreadUnsafeSet(),
     }
 }
 
-// Add the specified Filter.
+// Add the specified filter.
 func (self *StandardFilterer) AddFilter(filter Filter) {
     self.lock.Lock()
     defer self.lock.Unlock()
@@ -76,7 +76,7 @@ func (self *StandardFilterer) AddFilter(filter Filter) {
     }
 }
 
-// Remove the specified Filter.
+// Remove the specified filter.
 func (self *StandardFilterer) RemoveFilter(filter Filter) {
     self.lock.Lock()
     defer self.lock.Unlock()
@@ -103,7 +103,7 @@ func (self *StandardFilterer) Filter(record *LogRecord) int {
     return recordVote
 }
 
-// Return all the Filter in this Filterer.
+// Return all the filter in this filterer.
 func (self *StandardFilterer) GetFilters() []Filter {
     self.lock.Lock()
     defer self.lock.Unlock()
