@@ -17,9 +17,11 @@ type NullHandler struct {
 
 // Initialize a NullHandler.
 func NewNullHandler() *NullHandler {
-    return &NullHandler{
+    object := &NullHandler{
         BaseHandler: logging.NewBaseHandler("", logging.LevelNotset),
     }
+    logging.Closer.AddHandler(object)
+    return object
 }
 
 func (self *NullHandler) Emit(_ *logging.LogRecord) error {

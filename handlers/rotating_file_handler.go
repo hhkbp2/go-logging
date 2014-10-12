@@ -44,6 +44,8 @@ func NewBaseRotatingHandler(
     object := &BaseRotatingHandler{
         FileHandler: fileHandler,
     }
+    logging.Closer.RemoveHandler(object.FileHandler)
+    logging.Closer.AddHandler(object)
     return object, nil
 }
 

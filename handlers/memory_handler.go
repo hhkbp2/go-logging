@@ -71,11 +71,13 @@ func NewMemoryHandler(
     flushLevel logging.LogLevelType,
     target logging.Handler) *MemoryHandler {
 
-    return &MemoryHandler{
+    object := &MemoryHandler{
         BaseBufferingHandler: NewBaseBufferingHandler(capacity),
         flushLevel:           flushLevel,
         target:               target,
     }
+    logging.Closer.AddHandler(object)
+    return object
 }
 
 func (self *MemoryHandler) ShouldFlush(record *logging.LogRecord) bool {

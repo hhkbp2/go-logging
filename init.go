@@ -1,9 +1,66 @@
 package logging
 
-var (
-    root    = NewRootLogger(LevelWarn)
-    manager = NewManager(root)
+import (
+    "github.com/deckarep/golang-set"
+    "sync"
 )
+
+type HandlerCloser struct {
+    handlers mapset.Set
+    lock     sync.Mutex
+}
+
+func NewHandlerCloser() *HandlerCloser {
+    return &HandlerCloser{
+        handlers: mapset.NewThreadUnsafeSet(),
+    }
+}
+
+func (self *HandlerCloser) AddHandler(handler Handler) {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    if !self.handlers.Contains(handler) {
+        self.handlers.Add(handler)
+    }
+}
+
+func (self *HandlerCloser) RemoveHandler(handler Handler) {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    if self.handlers.Contains(handler) {
+        self.handlers.Remove(handler)
+    }
+}
+
+func (self *HandlerCloser) Close() {
+    self.lock.Lock()
+    defer self.lock.Unlock()
+    for i := range self.handlers.Iter() {
+        handler, _ := i.(Handler)
+        handler.Close()
+    }
+}
+
+var (
+    root    Logger
+    manager *Manager
+    Closer  *HandlerCloser
+)
+
+func init() {
+    initialize()
+}
+
+func initialize() {
+    root = NewRootLogger(LevelWarn)
+    manager = NewManager(root)
+    Closer = NewHandlerCloser()
+}
+
+func Shutdown() {
+    Closer.Close()
+    initialize()
+}
 
 // Return a logger with the specified name, creating it if necessary.
 // If empty name is specified, return the root logger.
@@ -43,8 +100,4 @@ func Debug(format string, args ...interface{}) {
 // Log a message with specified severity level on the root logger.
 func Log(level LogLevelType, format string, args ...interface{}) {
     root.Log(level, format, args...)
-}
-
-func Shutdown() {
-    // TODO shutdown every logger in manager
 }

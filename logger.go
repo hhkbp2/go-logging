@@ -140,7 +140,7 @@ type StandardLogger struct {
 
 // Initialize a standard logger instance with name and logging level.
 func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
-    return &StandardLogger{
+    object := &StandardLogger{
         StandardFilterer: NewStandardFilterer(),
         parent:           nil,
         name:             name,
@@ -149,6 +149,7 @@ func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
         handlers:         mapset.NewSet(),
         manager:          nil,
     }
+    return object
 }
 
 func (self *StandardLogger) Type() NodeType {

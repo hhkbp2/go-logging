@@ -18,10 +18,12 @@ type MockHandler struct {
 }
 
 func NewMockHandler(t *testing.T) *MockHandler {
-    return &MockHandler{
+    object := &MockHandler{
         BaseHandler: NewBaseHandler("", LevelDebug),
         emitChan:    make(chan *LogRecord, 100),
     }
+    Closer.AddHandler(object)
+    return object
 }
 
 func (self *MockHandler) Emit(record *LogRecord) error {
@@ -49,9 +51,11 @@ func (self *MockHandler) GetEmitOnTimeout(
 }
 
 func TestLoggerLogToHandler(t *testing.T) {
-    handler := NewMockHandler(t)
-    logger := GetLogger("a")
+    defer Shutdown()
+    logger := GetLogger("b")
     logger.SetLevel(LevelDebug)
+    require.Equal(t, 0, len(logger.GetHandlers()))
+    handler := NewMockHandler(t)
     logger.AddHandler(handler)
     require.Equal(t, 1, len(logger.GetHandlers()))
     message := "abcd"

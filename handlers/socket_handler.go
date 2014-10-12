@@ -15,12 +15,14 @@ type SocketHandler struct {
 }
 
 func NewSocketHandler(host string, port uint16) *SocketHandler {
-    return &SocketHandler{
+    object := &SocketHandler{
         BaseHandler:  logging.NewBaseHandler("", logging.LevelNotset),
         host:         host,
         port:         port,
         closeOnError: false,
     }
+    logging.Closer.AddHandler(object)
+    return object
 }
 
 func (self *SocketHandler) Serialize(record *logging.LogRecord) []byte {

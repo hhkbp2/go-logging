@@ -29,10 +29,12 @@ type StreamHandler struct {
 func NewStreamHandler(
     name string, level logging.LogLevelType, stream Stream) *StreamHandler {
 
-    return &StreamHandler{
+    object := &StreamHandler{
         BaseHandler: logging.NewBaseHandler(name, level),
         stream:      stream,
     }
+    logging.Closer.AddHandler(object)
+    return object
 }
 
 // Return the underlying stream.

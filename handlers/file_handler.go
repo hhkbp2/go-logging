@@ -65,6 +65,8 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
     if err = object.Open(); err != nil {
         return nil, err
     }
+    logging.Closer.RemoveHandler(object.StreamHandler)
+    logging.Closer.AddHandler(object)
     return object, nil
 }
 

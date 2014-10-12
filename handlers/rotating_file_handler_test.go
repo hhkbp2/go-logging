@@ -26,6 +26,7 @@ func removeFile(t *testing.T, filename string) {
 }
 
 func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
+    defer logging.Shutdown()
     handler, err := NewRotatingFileHandler(
         testFileName, testFileMode, testRotateMaxByte, testRotateBackupCount)
     require.Nil(t, err)
@@ -47,6 +48,7 @@ func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 }
 
 func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
+    defer logging.Shutdown()
     // clean up the existing log file
     if FileExists(testFileName) {
         require.Nil(t, os.Remove(testFileName))
