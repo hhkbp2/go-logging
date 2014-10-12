@@ -8,8 +8,11 @@ import (
     "strings"
 )
 
+// Function type of extracting the corresponding LogRecord info for
+// the attribute string.
 type ExtractAttr func(record *LogRecord) string
 
+// All predefined attribute string and their ExtractAttr functions.
 var (
     attrToFunc = map[string]ExtractAttr{
         "%(name)s": func(record *LogRecord) string {
@@ -46,6 +49,7 @@ var (
     formatRe *regexp.Regexp
 )
 
+// Initialize global regexp for attribute matching.
 func init() {
     var buf bytes.Buffer
     buf.WriteString("(%(?:%")
@@ -58,22 +62,51 @@ func init() {
     formatRe = regexp.MustCompile(re)
 }
 
+// Default format strings.
 var (
     defaultFormat     = "%(message)s"
     defaultDateFormat = "%Y-%m-%d %H:%M:%S %3n"
     defaultFormatter  = NewStandardFormatter(defaultFormat, defaultDateFormat)
 )
 
+// Formatter interface is for converting a LogRecord to text.
+// Formatters need to know how a LogRecord is constructed. They are responsible
+// for converting a LogRecord to (usually) a string which can be interpreted
+// by either a human or an external system.
 type Formatter interface {
     Format(record *LogRecord) string
 }
 
+// The standard Formatter. It allows a formatting string to be specified.
+// If none is supplied, the default value of "%(message)s" is used.
+//
+// The Formatter can be initialized with a format string which makes use of
+// knowledge of the LogRecord attributes - e.g. the default value mentioned
+// above makes use of the fact that the user's message and arguments are
+// preformatted into a LogRecord's message attribute. Currently, the usefull
+// attributes in a LogRecord are described by:
+//
+// %(name)s            Name of the logger(logging channel)
+// %(levelno)d         Numeric logging level for the message
+// %(levelname)s       Text logging level for the message
+// %(pathname)s        Full pathname of the source file where the logging
+//                     call was issued (is available)
+// %(filename)s        Filename portion of pathname
+// %(lineno)d          Source line number where the logging call was issued
+// %(funcname)s        Function name
+// %(created)d         Time when the LogRecord was created(time.Now()
+//                     return value)
+// %(asctime)s         Textual time when LogRecord was created
+// %(message)s         The result of record.GetMessage(), computed just as the
+//                     record is emitted
 type StandardFormatter struct {
     format       string
     toFormatTime bool
     dateFormat   string
 }
 
+// Initialize the formatter with specified format strings.
+// Allow for specialized date formatting with the dateFormat arguement.
 func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
     toFormatTime := false
     if strings.Index(format, "%(asctime)s") > 0 {
@@ -86,11 +119,23 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
     }
 }
 
+// Return the creation time of the specified LogRecord as formatted text.
+// This method should be called from Format() by a formatter which wants to
+// make use of a formatted time. This method can be overridden in formatters
+// to provide for any specific requirement, but the basic behaviour is as
+// follows: the dateFormat is used with strftime.Format() to format
+// the creation time of the record.
 func (self *StandardFormatter) FormatTime(record *LogRecord) string {
     // Use the library go-strftime to format the time record.Created.
     return strftime.Format(self.dateFormat, record.CreatedTime)
 }
 
+// Format the specified record as text.
+// The record's attribute is used as the operand to a string formatting
+// operation which yields the returned string. Before the formatting,
+// a couple of preparatory steps are carried out. The message attribute of
+// the record is computed using LogRecord.GetMessage(). If the formatting
+// string uses the time, FormatTime() is called to format the event time.
 func (self *StandardFormatter) Format(record *LogRecord) string {
     record.Message = record.GetMessage()
     if self.toFormatTime {
@@ -111,9 +156,46 @@ func repl(match string, record *LogRecord) string {
     return match
 }
 
+// Helper function using regexp to replace every valid format attribute string
+// to the record's specific value.
 func Format(format string, record *LogRecord) string {
     fn := func(match string) string {
         return repl(match, record)
     }
     return formatRe.ReplaceAllStringFunc(format, fn)
+}
+
+// A Formatter suitable for formatting a number of records.
+type BufferingFormatter struct {
+    lineFormatter Formatter
+}
+
+// Initialize the buffering formatter with specified line formatter.
+func NewBufferingFormatter(lineFormatter Formatter) *BufferingFormatter {
+    return &BufferingFormatter{
+        lineFormatter: lineFormatter,
+    }
+}
+
+// Return the header string for the specified records.
+func (self *BufferingFormatter) FormatHeader(_ []*LogRecord) string {
+    return ""
+}
+
+// Return the footer string for the specified records.
+func (self *BufferingFormatter) FormatFooter(_ []*LogRecord) string {
+    return ""
+}
+
+// Format the specified records and return the result as a a string.
+func (self *BufferingFormatter) Format(records []*LogRecord) string {
+    var buf bytes.Buffer
+    if len(records) > 0 {
+        buf.WriteString(self.FormatHeader(records))
+        for _, record := range records {
+            buf.WriteString(self.lineFormatter.Format(record))
+        }
+        buf.WriteString(self.FormatFooter(records))
+    }
+    return buf.String()
 }
