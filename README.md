@@ -19,7 +19,7 @@ With an obivious intention to be a port of ```logging``` for Golang, ```go-loggi
 2. It supports Logger hierarchy
 3. Optional Filter on Logger and Handler
 4. It could be configured throught handy config file in various format
-5. It support handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, socket, rpc(the corresponding servers are also provided as bundled) etc.
+5. It support handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(the corresponding servers are also provided as bundled) etc.
 
 Please note that 4, 5 are under development and not fully ready at this moment.
 
