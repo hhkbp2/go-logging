@@ -15,13 +15,12 @@ Due to the lack of a good logging facility, many people start to develop their o
 
 With an obivious intention to be a port of ```logging``` for Golang, ```go-logging``` has all the main features that ```logging``` package has:
 
-1. It supports logging level, logging sources(Logger) and destinations(Handler) customization and flexible combinations of them
-2. It supports Logger hierarchy
-3. Optional Filter on Logger and Handler
+1. It supports logging level, logging sources(logger) and destinations(handler) customization and flexible combinations of them
+2. It supports logger hierarchy, optional filter on logger and handler, optional formatter on handler
+3. It support handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(the corresponding servers are also provided as bundled) etc.
 4. It could be configured throught handy config file in various format
-5. It support handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(the corresponding servers are also provided as bundled) etc.
 
-Please note that 4, 5 are under development and not fully ready at this moment.
+Please note that 3, 4 are under development and not fully ready at this moment.
 
 ## Usage
 
