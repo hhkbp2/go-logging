@@ -492,9 +492,9 @@ func (self *Manager) fixupParents(logger Logger) {
     var parent Logger
     if (index > 0) && (parent == nil) {
         parentStr := name[:index]
-        node, ok := self.loggers[name]
+        node, ok := self.loggers[parentStr]
         if !ok {
-            self.loggers[name] = NewPlaceHolder(logger)
+            self.loggers[parentStr] = NewPlaceHolder(logger)
         } else {
             switch node.Type() {
             case NodePlaceHolder:
