@@ -79,9 +79,23 @@ func (self *FileHandler) GetFilePath() string {
 // and set it to the underlying stream handler.
 // Return non-nil error if error happens.
 func (self *FileHandler) Open() error {
-    file, err := os.OpenFile(
-        self.filepath, os.O_WRONLY|os.O_CREATE|self.mode, 0666)
-    if err != nil {
+    var file *os.File
+    var err error
+    for {
+        file, err = os.OpenFile(
+            self.filepath, os.O_WRONLY|os.O_CREATE|self.mode, 0666)
+        if err == nil {
+            break
+        }
+        // try to create all the parent directories for specified log file
+        // if it doesn't exist
+        if os.IsNotExist(err) {
+            err2 := os.MkdirAll(filepath.Dir(self.filepath), 0755)
+            if err2 != nil {
+                return err
+            }
+            continue
+        }
         return err
     }
     stream := &FileStream{
