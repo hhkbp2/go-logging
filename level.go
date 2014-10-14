@@ -15,13 +15,13 @@ type LogLevelType uint8
 // at user-defined levels.
 const (
     LevelCritical LogLevelType = 50
-    LevelFatal                 = LevelCritical
-    LevelError                 = 40
-    LevelWarning               = 30
-    LevelWarn                  = LevelWarning
-    LevelInfo                  = 20
-    LevelDebug                 = 10
-    LevelNotset                = 0
+    LevelFatal    LogLevelType = LevelCritical
+    LevelError    LogLevelType = 40
+    LevelWarning  LogLevelType = 30
+    LevelWarn     LogLevelType = LevelWarning
+    LevelInfo     LogLevelType = 20
+    LevelDebug    LogLevelType = 10
+    LevelNotset   LogLevelType = 0
 )
 
 var (
