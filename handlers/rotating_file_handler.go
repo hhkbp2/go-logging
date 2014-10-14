@@ -115,6 +115,20 @@ func NewRotatingFileHandler(
     return object, nil
 }
 
+func MustNewRotatingFileHandler(
+    filepath string,
+    mode int,
+    maxByte uint64,
+    backupCount uint32) *RotatingFileHandler {
+
+    handler, err := NewRotatingFileHandler(
+        filepath, mode, maxByte, backupCount)
+    if err != nil {
+        panic("NewRotatingFileHandler(), error: " + err.Error())
+    }
+    return handler
+}
+
 // Determine if rollover should occur.
 // Basically, see if the supplied record would cause the file to exceed the
 // size limit we have.
