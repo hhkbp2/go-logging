@@ -109,7 +109,7 @@ type StandardFormatter struct {
 // Allow for specialized date formatting with the dateFormat arguement.
 func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
     toFormatTime := false
-    if strings.Index(format, "%(asctime)s") > 0 {
+    if strings.Index(format, "%(asctime)s") != -1 {
         toFormatTime = true
     }
     return &StandardFormatter{

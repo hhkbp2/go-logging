@@ -23,8 +23,9 @@ type LogRecord struct {
     FileName string
     LineNo   uint32
     FuncName string
-    Message  string
+    Format   string
     Args     []interface{}
+    Message  string
 }
 
 // Initialize a logging record with interesting information.
@@ -35,7 +36,7 @@ func NewLogRecord(
     fileName string,
     lineNo uint32,
     funcName string,
-    message string,
+    format string,
     args []interface{}) *LogRecord {
 
     return &LogRecord{
@@ -46,8 +47,9 @@ func NewLogRecord(
         FileName:    fileName,
         LineNo:      lineNo,
         FuncName:    funcName,
-        Message:     message,
+        Format:      format,
         Args:        args,
+        Message:     "",
     }
 }
 
@@ -61,7 +63,7 @@ func (self *LogRecord) String() string {
 // The message is composed of the Message and any user-supplied arguments.
 func (self *LogRecord) GetMessage() string {
     if self.Args != nil {
-        return fmt.Sprintf(self.Message, self.Args...)
+        return fmt.Sprintf(self.Format, self.Args...)
     }
-    return self.Message
+    return self.Format
 }
