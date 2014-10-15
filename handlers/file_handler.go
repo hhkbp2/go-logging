@@ -32,11 +32,14 @@ func (self *FileStream) Write(s string) error {
 }
 
 func (self *FileStream) Flush() error {
-    // TODO to be optimized for performance
-    return self.File.Sync()
+    // NOTICE: For performance optimization, don't sync inner buffer to
+    // disk everytime it writes something.
+    // return self.File.Sync()
+    return nil
 }
 
 func (self *FileStream) Close() error {
+    self.File.Sync()
     return self.File.Close()
 }
 

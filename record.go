@@ -16,16 +16,17 @@ import (
 type LogRecord struct {
     CreatedTime time.Time
     AscTime     string
-
-    Name     string
-    Level    LogLevelType
-    PathName string
-    FileName string
-    LineNo   uint32
-    FuncName string
-    Format   string
-    Args     []interface{}
-    Message  string
+    Name        string
+    Level       LogLevelType
+    PathName    string
+    FileName    string
+    LineNo      uint32
+    FuncName    string
+    Format      string
+    Args        []interface{}
+    // Message is a pointer to the real message which is updated only once.
+    // A trick to optimize the performance.
+    Message *string
 }
 
 // Initialize a logging record with interesting information.
@@ -49,7 +50,7 @@ func NewLogRecord(
         FuncName:    funcName,
         Format:      format,
         Args:        args,
-        Message:     "",
+        Message:     nil,
     }
 }
 
@@ -62,8 +63,13 @@ func (self *LogRecord) String() string {
 // Return the message for this LogRecord.
 // The message is composed of the Message and any user-supplied arguments.
 func (self *LogRecord) GetMessage() string {
-    if self.Args != nil {
-        return fmt.Sprintf(self.Format, self.Args...)
+    if self.Message == nil {
+        if self.Args != nil {
+            message := fmt.Sprintf(self.Format, self.Args...)
+            self.Message = &message
+        } else {
+            self.Message = &self.Format
+        }
     }
-    return self.Format
+    return *self.Message
 }

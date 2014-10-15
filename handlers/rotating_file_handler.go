@@ -21,7 +21,7 @@ func FileExists(filename string) bool {
 type RotatingHandler interface {
     logging.Handler
     // Determine if rollover should occur.
-    ShouldRollover(record *logging.LogRecord) bool
+    ShouldRollover(record *logging.LogRecord) (doRollover bool, message string)
     // Do a rollover.
     DoRollover() error
 }
@@ -53,12 +53,21 @@ func NewBaseRotatingHandler(
 func (self *BaseRotatingHandler) RolloverEmit(
     handler RotatingHandler, record *logging.LogRecord) error {
 
-    if handler.ShouldRollover(record) {
+    // We don't use the implementation of StreamHandler.Emit2() but directly
+    // write to stream here in order to avoid calling self.Format() twice
+    // for performance optimization.
+    doRollover, message := handler.ShouldRollover(record)
+    if doRollover {
         if err := handler.DoRollover(); err != nil {
             return err
         }
     }
-    if err := self.Emit(record); err != nil {
+    // Message already has a trailing '\n'.
+    err := self.GetStream().Write(message)
+    if err != nil {
+        return err
+    }
+    if err = handler.Flush(); err != nil {
         return err
     }
     return nil
@@ -133,20 +142,20 @@ func MustNewRotatingFileHandler(
 // Basically, see if the supplied record would cause the file to exceed the
 // size limit we have.
 func (self *RotatingFileHandler) ShouldRollover(
-    record *logging.LogRecord) bool {
+    record *logging.LogRecord) (bool, string) {
 
+    message := fmt.Sprintf("%s\n", self.Format(record))
     if self.maxByte > 0 {
-        message := fmt.Sprintf("%s\n", self.Format(record))
         offset, err := self.GetStream().Tell()
         if err != nil {
             // don't trigger rollover action if we lose offset info
-            return false
+            return false, message
         }
         if (uint64(offset) + uint64(len(message))) > self.maxByte {
-            return true
+            return true, message
         }
     }
-    return false
+    return false, message
 }
 
 // Rotate source file to destination file if source file exists.

@@ -80,5 +80,6 @@ func (self *StreamHandler) Flush() error {
 
 // A helper function for subclass implementation to close stream.
 func (self *StreamHandler) Close2() {
+    self.Flush()
     self.stream.Close()
 }

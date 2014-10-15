@@ -59,5 +59,5 @@ func TestFormat_AscTime(t *testing.T) {
 }
 
 func TestFormat_Message(t *testing.T) {
-    require.Equal(t, testRecord.Message, Format(defaultFormat, testRecord))
+    require.Equal(t, testRecord.GetMessage(), Format(defaultFormat, testRecord))
 }

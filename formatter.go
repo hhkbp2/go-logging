@@ -43,7 +43,7 @@ var (
             return record.AscTime
         },
         "%(message)s": func(record *LogRecord) string {
-            return record.Message
+            return *record.Message
         },
     }
     formatRe *regexp.Regexp
@@ -137,7 +137,7 @@ func (self *StandardFormatter) FormatTime(record *LogRecord) string {
 // the record is computed using LogRecord.GetMessage(). If the formatting
 // string uses the time, FormatTime() is called to format the event time.
 func (self *StandardFormatter) Format(record *LogRecord) string {
-    record.Message = record.GetMessage()
+    record.GetMessage()
     if self.toFormatTime {
         record.AscTime = self.FormatTime(record)
     }
