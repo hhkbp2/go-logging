@@ -1,63 +1,73 @@
 package logging
 
 import (
-    "fmt"
-    "github.com/hhkbp2/testify/require"
-    "testing"
+	"fmt"
+	"github.com/hhkbp2/testify/require"
+	"testing"
 )
 
 var (
-    testRecord = NewLogRecord(
-        "name",
-        LevelInfo,
-        "pathname",
-        "filename",
-        111,
-        "funcname",
-        "message",
-        nil)
+	testRecord = NewLogRecord(
+		"name",
+		LevelInfo,
+		"pathname",
+		"filename",
+		111,
+		"funcname",
+		"message",
+		nil)
 )
 
 func TestFormat_Name(t *testing.T) {
-    require.Equal(t, testRecord.Name, Format("%(name)s", testRecord))
+	formatter := NewStandardFormatter("%(name)s", "")
+	require.Equal(t, testRecord.Name, formatter.Format(testRecord))
 }
 
 func TestFormat_LevelNo(t *testing.T) {
-    levelNo := fmt.Sprintf("%d", testRecord.Level)
-    require.Equal(t, levelNo, Format("%(levelno)d", testRecord))
+	formatter := NewStandardFormatter("%(levelno)d", "")
+	levelNo := fmt.Sprintf("%d", testRecord.Level)
+	require.Equal(t, levelNo, formatter.Format(testRecord))
 }
 
 func TestFormat_LevelName(t *testing.T) {
-    levelName := GetLevelName(testRecord.Level)
-    require.Equal(t, levelName, Format("%(levelname)s", testRecord))
+	formatter := NewStandardFormatter("%(levelname)s", "")
+	levelName := GetLevelName(testRecord.Level)
+	require.Equal(t, levelName, formatter.Format(testRecord))
 }
 
 func TestFormat_PathName(t *testing.T) {
-    require.Equal(t, testRecord.PathName, Format("%(pathname)s", testRecord))
+	formatter := NewStandardFormatter("%(pathname)s", "")
+	require.Equal(t, testRecord.PathName, formatter.Format(testRecord))
 }
 
 func TestFormat_FileName(t *testing.T) {
-    require.Equal(t, testRecord.FileName, Format("%(filename)s", testRecord))
+	formatter := NewStandardFormatter("%(filename)s", "")
+	require.Equal(t, testRecord.FileName, formatter.Format(testRecord))
 }
 
 func TestFormat_LineNo(t *testing.T) {
-    lineNo := fmt.Sprintf("%d", testRecord.LineNo)
-    require.Equal(t, lineNo, Format("%(lineno)d", testRecord))
+	formatter := NewStandardFormatter("%(lineno)d", "")
+	lineNo := fmt.Sprintf("%d", testRecord.LineNo)
+	require.Equal(t, lineNo, formatter.Format(testRecord))
 }
 
 func TestFormat_FuncName(t *testing.T) {
-    require.Equal(t, testRecord.FuncName, Format("%(funcname)s", testRecord))
+	formatter := NewStandardFormatter("%(funcname)s", "")
+	require.Equal(t, testRecord.FuncName, formatter.Format(testRecord))
 }
 
 func TestFormat_Created(t *testing.T) {
-    created := fmt.Sprintf("%d", testRecord.CreatedTime.UnixNano())
-    require.Equal(t, created, Format("%(created)d", testRecord))
+	formatter := NewStandardFormatter("%(created)d", "")
+	created := fmt.Sprintf("%d", testRecord.CreatedTime.UnixNano())
+	require.Equal(t, created, formatter.Format(testRecord))
 }
 
 func TestFormat_AscTime(t *testing.T) {
-    require.Equal(t, testRecord.AscTime, Format("%(asctime)s", testRecord))
+	formatter := NewStandardFormatter("%(asctime)s", defaultDateFormat)
+	require.Equal(t, testRecord.AscTime, formatter.Format(testRecord))
 }
 
 func TestFormat_Message(t *testing.T) {
-    require.Equal(t, testRecord.GetMessage(), Format(defaultFormat, testRecord))
+	formatter := defaultFormatter
+	require.Equal(t, testRecord.GetMessage(), formatter.Format(testRecord))
 }

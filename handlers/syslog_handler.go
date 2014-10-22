@@ -5,6 +5,7 @@ import (
 	"log/syslog"
 )
 
+// A handler class which sends formatted logging records to a syslog server.
 type SyslogHandler struct {
 	*logging.BaseHandler
 	network  string
@@ -14,6 +15,8 @@ type SyslogHandler struct {
 	writer   *syslog.Writer
 }
 
+// Initialize a syslog handler.
+// The arguements are the same as New() in package log/syslog.
 func NewSyslogHandler(
 	priority syslog.Priority,
 	tag string) (*SyslogHandler, error) {
@@ -33,6 +36,8 @@ func NewSyslogHandler(
 	return object, nil
 }
 
+// Initialize a syslog handler with connection to a specified syslog server.
+// The arguements are the same as Dial() in package log/syslog.
 func NewSyslogHandlerToAddr(
 	network, raddr string,
 	priority syslog.Priority,
@@ -53,6 +58,9 @@ func NewSyslogHandlerToAddr(
 	return object, nil
 }
 
+// Emit a record.
+// The record is formatted, and then sent to the syslog server
+// in specified log level.
 func (self *SyslogHandler) Emit(record *logging.LogRecord) error {
 	message := self.BaseHandler.Format(record)
 	var err error
