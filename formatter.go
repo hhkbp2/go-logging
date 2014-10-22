@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hhkbp2/go-strftime"
 	"regexp"
-	"strings"
 )
 
 // Function type of extracting the corresponding LogRecord info for
@@ -105,21 +104,22 @@ type StandardFormatter struct {
 	getFormatArgsFunc GetFormatArgsFunc
 	toFormatTime      bool
 	dateFormat        string
+	dateFormatter     *strftime.Formatter
 }
 
 // Initialize the formatter with specified format strings.
 // Allow for specialized date formatting with the dateFormat arguement.
 func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 	toFormatTime := false
-	if strings.Index(format, "%(asctime)s") != -1 {
-		toFormatTime = true
-	}
 	size := 0
 	f1 := func(match string) string {
-		size++
 		if match == "%%" {
 			return "%"
 		}
+		if match == "%(asctime)s" {
+			toFormatTime = true
+		}
+		size++
 		return "%s"
 	}
 	strFormat := formatRe.ReplaceAllStringFunc(format, f1)
@@ -139,12 +139,17 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 		}
 		return result
 	}
+	var dateFormatter *strftime.Formatter
+	if toFormatTime {
+		dateFormatter = strftime.NewFormatter(dateFormat)
+	}
 	return &StandardFormatter{
 		format:            format,
 		strFormat:         strFormat,
 		getFormatArgsFunc: getFormatArgsFunc,
 		toFormatTime:      toFormatTime,
 		dateFormat:        dateFormat,
+		dateFormatter:     dateFormatter,
 	}
 }
 
@@ -156,7 +161,7 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 // the creation time of the record.
 func (self *StandardFormatter) FormatTime(record *LogRecord) string {
 	// Use the library go-strftime to format the time record.Created.
-	return strftime.Format(self.dateFormat, record.CreatedTime)
+	return self.dateFormatter.Format(record.CreatedTime)
 }
 
 // Format the specified record as text.
