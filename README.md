@@ -24,13 +24,13 @@ Please note that 3, 4 are under development and not fully ready at this moment.
 
 ## Usage
 
-Get the code down using the standard go tool:
+Get this library using the standard go tool:
 
 ```bash
 go get github.com/hhkbp2/go-logging
 ```
 
-and write your code just like:
+#### Example 1: Log to standard output
 
 ```go
 package main
@@ -42,9 +42,67 @@ import (
 func main() {
      logger := logging.GetLogger("a.b")
      handler := handlers.NewTerminalHandler()
-     logger.AddHandler(handler)     
-     logger.Warnf("test message")
+     logger.AddHandler(handler)
+     logger.Warnf("message: %s %d", "Hello", 2015)
 }
+```
+
+The code above outputs as the following:
+
+```text
+message: Hello 2015
+```
+
+#### Example 2: Log to file
+
+```go
+package main
+
+import (
+	"github.com/hhkbp2/go-logging"
+	"github.com/hhkbp2/go-logging/handlers"
+	"os"
+)
+
+func main() {
+
+	filePath := "./test.log"
+	fileMode := os.O_APPEND
+	// set the maximum size of every file to 100 M bytes
+	fileMaxByte := uint64(100 * 1024 * 1024)
+	// keep 9 backup at most(including the current using one,
+	// there could be 10 log file at most)
+	backupCount := uint32(9)
+	// create a handler(which represents a log message destination)
+	handler := handlers.MustNewRotatingFileHandler(
+		filePath, fileMode, fileMaxByte, backupCount)
+
+	// the format for the whole log message
+	format := "%(asctime)s %(levelname)s (%(filename)s:%(lineno)d) " +
+		"%(name)s %(message)s"
+	// the format for the time part
+	dateFormat := "%Y-%m-%d %H:%M:%S.%3n"
+	// create a formatter(which controls how log messages are formatted)
+	formatter := logging.NewStandardFormatter(format, dateFormat)
+	// set formatter for handler
+	handler.SetFormatter(formatter)
+
+	// create a logger(which represents a log message source)
+	logger := logging.GetLogger("a.b.c")
+	logger.SetLevel(logging.LevelInfo)
+	logger.AddHandler(handler)
+
+	// ensure all log messages are flushed to disk before program exits.
+	defer logging.Shutdown()
+
+	logger.Infof("message: %s %d", "Hello", 2015)
+}
+```
+
+Compile and run the code above, it would generate a log file "./test.log" under current working directory. The log file contains a single line:
+
+```text
+2015-04-04 14:20:33.714 INFO (main2.go:40) a.b.c message: Hello 2015
 ```
 
 For more examples please refer to the test cases in source code.
