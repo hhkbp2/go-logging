@@ -43,7 +43,7 @@ func main() {
      logger := logging.GetLogger("a.b")
      handler := handlers.NewTerminalHandler()
      logger.AddHandler(handler)     
-     logger.Warn("test message")
+     logger.Warnf("test message")
 }
 ```
 
@@ -51,11 +51,10 @@ For more examples please refer to the test cases in source code.
 
 ## Documentation
 
-For docs, run:
+For docs, refer to: 
 
-```bash
-go doc github.com/hhkbp2/go-logging
-```
+[https://gowalker.org/github.com/hhkbp2/go-logging](https://gowalker.org/github.com/hhkbp2/go-logging)
+[https://gowalker.org/github.com/hhkbp2/go-logging/handlers](https://gowalker.org/github.com/hhkbp2/go-logging/handlers)
 
 For much more details please refer to the documentation for [```logging```][python-logging-page].
 

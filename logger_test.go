@@ -59,7 +59,7 @@ func TestLoggerLogToHandler(t *testing.T) {
 	logger.AddHandler(handler)
 	require.Equal(t, 1, len(logger.GetHandlers()))
 	message := "abcd"
-	logger.Debug(message)
+	logger.Debugf(message)
 	record, err := handler.GetEmitOnTimeout(time.Second * 0)
 	require.Nil(t, err)
 	require.Equal(t, message, record.GetMessage())

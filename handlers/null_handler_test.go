@@ -12,6 +12,6 @@ func TestNullHandler(t *testing.T) {
 	logger.AddHandler(handler)
 	require.Equal(t, 1, len(logger.GetHandlers()))
 	message := "test"
-	logger.Debug(message)
-	logger.Fatal(message)
+	logger.Debugf(message)
+	logger.Fatalf(message)
 }

@@ -37,7 +37,7 @@ func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 	size := uint64(len(message) + 1)
 	total := testRotateMaxByte * (uint64(testRotateBackupCount) + 2) / size
 	for i := uint64(0); i < total; i++ {
-		logger.Error(message)
+		logger.Errorf(message)
 	}
 	logger.RemoveHandler(handler)
 	handler.Close()
@@ -64,7 +64,7 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	totalSize := testRotateMaxByte * (uint64(testRotateBackupCount) + 2)
 	times := totalSize / size
 	for i := uint64(0); i < times; i++ {
-		logger.Error(message)
+		logger.Errorf(message)
 	}
 	logger.RemoveHandler(handler)
 	handler.Close()

@@ -12,7 +12,7 @@ func TestShutdown(t *testing.T) {
 	logger := GetLogger("a")
 	logger.AddHandler(handler)
 	message := "abcd"
-	logger.Error(message)
+	logger.Errorf(message)
 	record, err := handler.GetEmitOnTimeout(time.Second * 0)
 	require.Nil(t, err)
 	require.Equal(t, message, record.GetMessage())

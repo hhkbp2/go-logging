@@ -9,5 +9,5 @@ func TestTerminalHandler(_ *testing.T) {
 	logger := logging.GetLogger("a.b")
 	handler := NewTerminalHandler()
 	logger.AddHandler(handler)
-	logger.Warn("test message")
+	logger.Warnf("test message")
 }

@@ -19,7 +19,7 @@ func TestFileHandler(t *testing.T) {
 	logger := logging.GetLogger("a")
 	logger.AddHandler(handler)
 	message := "test"
-	logger.Error(message)
+	logger.Errorf(message)
 	logger.RemoveHandler(handler)
 	handler.Close()
 	// open the log file and check its content equals to message
@@ -41,7 +41,7 @@ func TestFileHandler_Asctime(t *testing.T) {
 	logger := logging.GetLogger("a")
 	logger.AddHandler(handler)
 	message := "test"
-	logger.Error(message)
+	logger.Errorf(message)
 	logger.RemoveHandler(handler)
 	handler.Close()
 	// open the log file and check its content equals to message

@@ -73,31 +73,31 @@ func GetLogger(name string) Logger {
 }
 
 // Log a message with severity "LevelFatal" on the root logger.
-func Fatal(format string, args ...interface{}) {
-	root.Fatal(format, args...)
+func Fatalf(format string, args ...interface{}) {
+	root.Fatalf(format, args...)
 }
 
 // Log a message with severity "LevelError" on the root logger.
-func Error(format string, args ...interface{}) {
-	root.Error(format, args...)
+func Errorf(format string, args ...interface{}) {
+	root.Errorf(format, args...)
 }
 
 // Log a message with severity "LevelWarn" on the root logger.
-func Warn(format string, args ...interface{}) {
-	root.Warn(format, args...)
+func Warnf(format string, args ...interface{}) {
+	root.Warnf(format, args...)
 }
 
 // Log a message with severity "LevelInfo" on the root logger.
-func Info(format string, args ...interface{}) {
-	root.Info(format, args...)
+func Infof(format string, args ...interface{}) {
+	root.Infof(format, args...)
 }
 
 // Log a message with severity "LevelDebug" on the root logger.
-func Debug(format string, args ...interface{}) {
-	root.Debug(format, args...)
+func Debugf(format string, args ...interface{}) {
+	root.Debugf(format, args...)
 }
 
 // Log a message with specified severity level on the root logger.
-func Log(level LogLevelType, format string, args ...interface{}) {
-	root.Log(level, format, args...)
+func Logf(level LogLevelType, format string, args ...interface{}) {
+	root.Logf(level, format, args...)
 }

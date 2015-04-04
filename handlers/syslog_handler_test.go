@@ -17,6 +17,6 @@ func TestSyslogHandler(t *testing.T) {
 	logger.SetLevel(logging.LevelDebug)
 	logger.AddHandler(handler)
 	prefix := "test syslog handler "
-	logger.Debug(prefix + "Debug() a message")
-	logger.Error(prefix + "Error() a message")
+	logger.Debugf(prefix + "Debug() a message")
+	logger.Errorf(prefix + "Error() a message")
 }

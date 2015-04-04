@@ -94,17 +94,17 @@ type Logger interface {
 	GetEffectiveLevel() LogLevelType
 
 	// Log a message with severity "LevelFatal".
-	Fatal(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
 	// Log a message with severity "LevelError".
-	Error(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
 	// Log a message with severity "LevelWarn".
-	Warn(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
 	// Log a message with severity "LevelInfo".
-	Info(format string, args ...interface{})
+	Infof(format string, args ...interface{})
 	// Log a message with severity "LevelDebug".
-	Debug(format string, args ...interface{})
+	Debugf(format string, args ...interface{})
 	// Log a message with specified severity level.
-	Log(level LogLevelType, format string, args ...interface{})
+	Logf(level LogLevelType, format string, args ...interface{})
 
 	// Add the specified handler to this Logger.
 	AddHandler(handler Handler)
@@ -212,37 +212,37 @@ func (self *StandardLogger) GetEffectiveLevel() LogLevelType {
 	return LevelNotset
 }
 
-func (self *StandardLogger) Fatal(format string, args ...interface{}) {
+func (self *StandardLogger) Fatalf(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelFatal) {
 		self.log(LevelFatal, format, args...)
 	}
 }
 
-func (self *StandardLogger) Error(format string, args ...interface{}) {
+func (self *StandardLogger) Errorf(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelError) {
 		self.log(LevelError, format, args...)
 	}
 }
 
-func (self *StandardLogger) Warn(format string, args ...interface{}) {
+func (self *StandardLogger) Warnf(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelWarn) {
 		self.log(LevelWarn, format, args...)
 	}
 }
 
-func (self *StandardLogger) Info(format string, args ...interface{}) {
+func (self *StandardLogger) Infof(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelInfo) {
 		self.log(LevelInfo, format, args...)
 	}
 }
 
-func (self *StandardLogger) Debug(format string, args ...interface{}) {
+func (self *StandardLogger) Debugf(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelDebug) {
 		self.log(LevelDebug, format, args...)
 	}
 }
 
-func (self *StandardLogger) Log(
+func (self *StandardLogger) Logf(
 	level LogLevelType, format string, args ...interface{}) {
 
 	if self.IsEnabledFor(level) {
