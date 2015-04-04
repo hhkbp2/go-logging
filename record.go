@@ -9,10 +9,10 @@ import (
 // LogRecord instances are created every time something is logged. They
 // contain all the information pretinent to the event being logged. The
 // main information passed in is in Message and Args, which are combined
-// using fmt.Sprintf() to create the message field of the record. The
-// record also includes information such as when the record was created,
-// the source line where the logging call was made, and any exception
-// information to be logged.
+// using fmt.Sprintf() or fmt.Sprint(), depending on value of UseFormat flag,
+// to create the message field of the record. The record also includes
+// information such as when the record was created, the source line where
+// the logging call was made, and any exception information to be logged.
 type LogRecord struct {
 	CreatedTime time.Time
 	AscTime     string
@@ -23,6 +23,7 @@ type LogRecord struct {
 	LineNo      uint32
 	FuncName    string
 	Format      string
+	UseFormat   bool
 	Args        []interface{}
 	// Message is a pointer to the real message which is updated only once.
 	// A trick to optimize the performance.
@@ -38,6 +39,7 @@ func NewLogRecord(
 	lineNo uint32,
 	funcName string,
 	format string,
+	useFormat bool,
 	args []interface{}) *LogRecord {
 
 	return &LogRecord{
@@ -49,6 +51,7 @@ func NewLogRecord(
 		LineNo:      lineNo,
 		FuncName:    funcName,
 		Format:      format,
+		UseFormat:   useFormat,
 		Args:        args,
 		Message:     nil,
 	}
@@ -64,12 +67,13 @@ func (self *LogRecord) String() string {
 // The message is composed of the Message and any user-supplied arguments.
 func (self *LogRecord) GetMessage() string {
 	if self.Message == nil {
-		if self.Args != nil {
-			message := fmt.Sprintf(self.Format, self.Args...)
-			self.Message = &message
+		var message string
+		if self.UseFormat {
+			message = fmt.Sprintf(self.Format, self.Args...)
 		} else {
-			self.Message = &self.Format
+			message = fmt.Sprint(self.Args...)
 		}
+		self.Message = &message
 	}
 	return *self.Message
 }

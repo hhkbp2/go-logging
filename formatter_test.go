@@ -14,8 +14,9 @@ var (
 		"filename",
 		111,
 		"funcname",
-		"message",
-		nil)
+		"",
+		false,
+		[]interface{}{"message"})
 )
 
 func TestFormat_Name(t *testing.T) {

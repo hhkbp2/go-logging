@@ -2,6 +2,7 @@ package logging
 
 import (
 	"errors"
+	"fmt"
 	"github.com/hhkbp2/testify/require"
 	"testing"
 	"time"
@@ -58,9 +59,19 @@ func TestLoggerLogToHandler(t *testing.T) {
 	handler := NewMockHandler(t)
 	logger.AddHandler(handler)
 	require.Equal(t, 1, len(logger.GetHandlers()))
+
+	// test format log
 	message := "abcd"
-	logger.Debugf(message)
+	format := "msg: %s"
+	logger.Debugf(format, message)
 	record, err := handler.GetEmitOnTimeout(time.Second * 0)
 	require.Nil(t, err)
-	require.Equal(t, message, record.GetMessage())
+	require.Equal(t, fmt.Sprintf(format, message), record.GetMessage())
+
+	// test default format for operand
+	testError := fmt.Errorf("Example error")
+	logger.Debug(testError)
+	record, err = handler.GetEmitOnTimeout(time.Second * 0)
+	require.Nil(t, err)
+	require.Equal(t, testError.Error(), record.GetMessage())
 }
