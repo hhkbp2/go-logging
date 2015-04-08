@@ -57,9 +57,15 @@ func initialize() {
 	Closer = NewHandlerCloser()
 }
 
+// Ensure all log messages are flushed before program exits.
 func Shutdown() {
 	Closer.Close()
 	initialize()
+}
+
+// Set logger maker for default manager.
+func SetLoggerMaker(maker LoggerMaker) {
+	manager.SetLoggerMaker(maker)
 }
 
 // Return a logger with the specified name, creating it if necessary.
