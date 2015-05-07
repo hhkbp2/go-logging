@@ -9,7 +9,7 @@ The [```logging```][python-logging-page] package of Python standard library is a
 
 When it comes to Golang, the standard release has a library called [```log```][golang-log-page] for logging. It's simple and good to log something into standard IO or a customized IO. In fact it's too simple to use in any **real** production enviroment, especially when compared to some other mature logging library. 
 
-Due to the lack of a good logging facility, many people start to develop their own versions. For example in github there are dozens of logging repositories for Golang. I run into the same problem when I am writing [```rafted```][rafted-github]. A powerful logging facility is needed to develop and debug it. I take a search on a few existing logging libraries for Golang but none of them seems to meet the requirement. So I decide to join the parade of "everyone is busy developing his own version", and then this library is created.
+Due to the lack of a good logging facility, many people start to develop their own versions. For example in github there are dozens of logging repositories for Golang. I run into the same problem when I am writing some project in Golang. A powerful logging facility is needed to develop and debug it. I take a search on a few existing logging libraries for Golang but none of them seems to meet the requirement. So I decide to join the parade of "everyone is busy developing his own version", and then this library is created.
 
 ## Features
 
@@ -121,6 +121,4 @@ For much more details please refer to the documentation for [```logging```][pyth
 [log4j-page]: http://logging.apache.org/log4j/
 
 [golang-log-page]: http://golang.org/pkg/log/
-
-[rafted-github]: http://github.com/hhkbp2/rafted
 
