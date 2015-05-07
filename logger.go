@@ -151,16 +151,42 @@ type Logger interface {
 	SetParent(parent Logger)
 }
 
+type FindCallerFunc func() *CallerInfo
+
+// Find the stack frame of the caller so that we can note the source file name,
+// line number and function name.
+func findCaller() *CallerInfo {
+	for i := 3; ; i++ {
+		pc, filepath, line, ok := runtime.Caller(i)
+		if !ok {
+			return UnknownCallerInfo
+		}
+		parts := strings.Split(filepath, "/")
+		dir := parts[len(parts)-2]
+		file := parts[len(parts)-1]
+		if (dir != thisPackageName) || (file != thisFileName) {
+			funcName := runtime.FuncForPC(pc).Name()
+			return &CallerInfo{
+				PathName: filepath,
+				FileName: file,
+				LineNo:   uint32(line),
+				FuncName: funcName,
+			}
+		}
+	}
+}
+
 // The standard logger implementation class.
 type StandardLogger struct {
 	*StandardFilterer
-	name      string
-	level     LogLevelType
-	parent    Logger
-	propagate bool
-	handlers  mapset.Set
-	manager   *Manager
-	lock      sync.RWMutex
+	name           string
+	level          LogLevelType
+	findCallerFunc FindCallerFunc
+	parent         Logger
+	propagate      bool
+	handlers       mapset.Set
+	manager        *Manager
+	lock           sync.RWMutex
 }
 
 // Initialize a standard logger instance with name and logging level.
@@ -169,6 +195,7 @@ func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
 		StandardFilterer: NewStandardFilterer(),
 		parent:           nil,
 		name:             name,
+		findCallerFunc:   findCaller,
 		level:            level,
 		propagate:        true,
 		handlers:         mapset.NewSet(),
@@ -185,6 +212,12 @@ func (self *StandardLogger) GetName() string {
 	self.lock.RLock()
 	defer self.lock.RUnlock()
 	return self.name
+}
+
+func (self *StandardLogger) SetFindCallerFunc(f FindCallerFunc) {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+	self.findCallerFunc = f
 }
 
 func (self *StandardLogger) GetPropagate() bool {
@@ -314,9 +347,9 @@ func (self *StandardLogger) Logf(
 }
 
 func (self *StandardLogger) doLog(
-level LogLevelType, args ...interface{}) {
+	level LogLevelType, args ...interface{}) {
 
-	callerInfo := self.findCaller()
+	callerInfo := self.findCallerFunc()
 	record := NewLogRecord(
 		self.name,
 		level,
@@ -333,7 +366,7 @@ level LogLevelType, args ...interface{}) {
 func (self *StandardLogger) doLogf(
 	level LogLevelType, format string, args ...interface{}) {
 
-	callerInfo := self.findCaller()
+	callerInfo := self.findCallerFunc()
 	record := NewLogRecord(
 		self.name,
 		level,
@@ -363,29 +396,6 @@ var (
 		FuncName: "(unknown function)",
 	}
 )
-
-// Find the stack frame of the caller so that we can note the source file name,
-// line number and function name.
-func (self *StandardLogger) findCaller() *CallerInfo {
-	for i := 1; ; i++ {
-		pc, filepath, line, ok := runtime.Caller(i)
-		if !ok {
-			return UnknownCallerInfo
-		}
-		parts := strings.Split(filepath, "/")
-		dir := parts[len(parts)-2]
-		file := parts[len(parts)-1]
-		if (dir != thisPackageName) || (file != thisFileName) {
-			funcName := runtime.FuncForPC(pc).Name()
-			return &CallerInfo{
-				PathName: filepath,
-				FileName: file,
-				LineNo:   uint32(line),
-				FuncName: funcName,
-			}
-		}
-	}
-}
 
 func (self *StandardLogger) Handle(record *LogRecord) {
 	if self.Filter(record) > 0 {
