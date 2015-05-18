@@ -34,16 +34,16 @@ go get github.com/hhkbp2/go-logging
 
 ```go
 package main
+
 import (
-       "github.com/hhkbp2/go-logging"
-       "github.com/hhkbp2/go-logging/handlers"
+	"github.com/hhkbp2/go-logging"
 )
 
 func main() {
-     logger := logging.GetLogger("a.b")
-     handler := handlers.NewTerminalHandler()
-     logger.AddHandler(handler)
-     logger.Warnf("message: %s %d", "Hello", 2015)
+	logger := logging.GetLogger("a.b")
+	handler := logging.NewTerminalHandler()
+	logger.AddHandler(handler)
+	logger.Warnf("message: %s %d", "Hello", 2015)
 }
 ```
 
@@ -60,12 +60,10 @@ package main
 
 import (
 	"github.com/hhkbp2/go-logging"
-	"github.com/hhkbp2/go-logging/handlers"
 	"os"
 )
 
 func main() {
-
 	filePath := "./test.log"
 	fileMode := os.O_APPEND
 	// set the maximum size of every file to 100 M bytes
@@ -74,7 +72,7 @@ func main() {
 	// there could be 10 log file at most)
 	backupCount := uint32(9)
 	// create a handler(which represents a log message destination)
-	handler := handlers.MustNewRotatingFileHandler(
+	handler := logging.MustNewRotatingFileHandler(
 		filePath, fileMode, fileMaxByte, backupCount)
 
 	// the format for the whole log message
