@@ -1,8 +1,7 @@
-package handlers
+package logging
 
 import (
 	"container/list"
-	"github.com/hhkbp2/go-logging"
 	"reflect"
 )
 
@@ -15,19 +14,19 @@ func IsNotNil(i interface{}) bool {
 }
 
 type BufferingHandler interface {
-	logging.Handler
-	ShouldFlush(record *logging.LogRecord) bool
+	Handler
+	ShouldFlush(record *LogRecord) bool
 }
 
 type BaseBufferingHandler struct {
-	*logging.BaseHandler
+	*BaseHandler
 	capacity uint64
 	buffer   *list.List
 }
 
 func NewBaseBufferingHandler(capacity uint64) *BaseBufferingHandler {
 	return &BaseBufferingHandler{
-		BaseHandler: logging.NewBaseHandler("", logging.LevelNotset),
+		BaseHandler: NewBaseHandler("", LevelNotset),
 		capacity:    capacity,
 		buffer:      list.New(),
 	}
@@ -37,12 +36,12 @@ func (self *BaseBufferingHandler) GetBuffer() *list.List {
 	return self.buffer
 }
 
-func (self *BaseBufferingHandler) ShouldFlush(_ *logging.LogRecord) bool {
+func (self *BaseBufferingHandler) ShouldFlush(_ *LogRecord) bool {
 	return uint64(self.buffer.Len()) >= self.capacity
 }
 
 func (self *BaseBufferingHandler) Emit2(
-	handler BufferingHandler, record *logging.LogRecord) error {
+	handler BufferingHandler, record *LogRecord) error {
 
 	self.buffer.PushBack(record)
 	if handler.ShouldFlush(record) {
@@ -62,38 +61,36 @@ func (self *BaseBufferingHandler) Close() {
 
 type MemoryHandler struct {
 	*BaseBufferingHandler
-	flushLevel logging.LogLevelType
-	target     logging.Handler
+	flushLevel LogLevelType
+	target     Handler
 }
 
 func NewMemoryHandler(
-	capacity uint64,
-	flushLevel logging.LogLevelType,
-	target logging.Handler) *MemoryHandler {
+	capacity uint64, flushLevel LogLevelType, target Handler) *MemoryHandler {
 
 	object := &MemoryHandler{
 		BaseBufferingHandler: NewBaseBufferingHandler(capacity),
 		flushLevel:           flushLevel,
 		target:               target,
 	}
-	logging.Closer.AddHandler(object)
+	Closer.AddHandler(object)
 	return object
 }
 
-func (self *MemoryHandler) ShouldFlush(record *logging.LogRecord) bool {
+func (self *MemoryHandler) ShouldFlush(record *LogRecord) bool {
 	return ((self.BaseBufferingHandler.ShouldFlush(record)) ||
 		(record.Level >= self.flushLevel))
 }
 
-func (self *MemoryHandler) SetTarget(target logging.Handler) {
+func (self *MemoryHandler) SetTarget(target Handler) {
 	self.target = target
 }
 
-func (self *MemoryHandler) Emit(record *logging.LogRecord) error {
+func (self *MemoryHandler) Emit(record *LogRecord) error {
 	return self.BaseBufferingHandler.Emit2(self, record)
 }
 
-func (self *MemoryHandler) Handle(record *logging.LogRecord) int {
+func (self *MemoryHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 
@@ -101,7 +98,7 @@ func (self *MemoryHandler) Flush() error {
 	if IsNotNil(self.target) {
 		buffer := self.BaseBufferingHandler.GetBuffer()
 		for e := buffer.Front(); e != nil; e = e.Next() {
-			record, _ := e.Value.(*logging.LogRecord)
+			record, _ := e.Value.(*LogRecord)
 			self.target.Handle(record)
 		}
 		return self.BaseBufferingHandler.Flush()

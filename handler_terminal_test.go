@@ -1,12 +1,11 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"testing"
 )
 
 func TestTerminalHandler(_ *testing.T) {
-	logger := logging.GetLogger("a.b")
+	logger := GetLogger("a.b")
 	handler := NewTerminalHandler()
 	logger.AddHandler(handler)
 	logger.Warnf("test message")

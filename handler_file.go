@@ -1,7 +1,6 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"os"
 	"path/filepath"
 )
@@ -59,7 +58,7 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler := NewStreamHandler(filepath, logging.LevelNotset, nil)
+	handler := NewStreamHandler(filepath, LevelNotset, nil)
 	object := &FileHandler{
 		StreamHandler: handler,
 		filepath:      filepath,
@@ -68,8 +67,8 @@ func NewFileHandler(filename string, mode int) (*FileHandler, error) {
 	if err = object.Open(); err != nil {
 		return nil, err
 	}
-	logging.Closer.RemoveHandler(object.StreamHandler)
-	logging.Closer.AddHandler(object)
+	Closer.RemoveHandler(object.StreamHandler)
+	Closer.AddHandler(object)
 	return object, nil
 }
 
@@ -109,11 +108,11 @@ func (self *FileHandler) Open() error {
 }
 
 // Emit a record.
-func (self *FileHandler) Emit(record *logging.LogRecord) error {
+func (self *FileHandler) Emit(record *LogRecord) error {
 	return self.StreamHandler.Emit2(self, record)
 }
 
-func (self *FileHandler) Handle(record *logging.LogRecord) int {
+func (self *FileHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 

@@ -1,8 +1,7 @@
-package handlers
+package logging
 
 import (
 	"fmt"
-	"github.com/hhkbp2/go-logging"
 	"os"
 )
 
@@ -19,9 +18,9 @@ func FileExists(filename string) bool {
 
 // An interface for rotating handler abstraction.
 type RotatingHandler interface {
-	logging.Handler
+	Handler
 	// Determine if rollover should occur.
-	ShouldRollover(record *logging.LogRecord) (doRollover bool, message string)
+	ShouldRollover(record *LogRecord) (doRollover bool, message string)
 	// Do a rollover.
 	DoRollover() error
 }
@@ -44,14 +43,14 @@ func NewBaseRotatingHandler(
 	object := &BaseRotatingHandler{
 		FileHandler: fileHandler,
 	}
-	logging.Closer.RemoveHandler(object.FileHandler)
-	logging.Closer.AddHandler(object)
+	Closer.RemoveHandler(object.FileHandler)
+	Closer.AddHandler(object)
 	return object, nil
 }
 
 // A helper function for subclass to emit record.
 func (self *BaseRotatingHandler) RolloverEmit(
-	handler RotatingHandler, record *logging.LogRecord) error {
+	handler RotatingHandler, record *LogRecord) error {
 
 	// We don't use the implementation of StreamHandler.Emit2() but directly
 	// write to stream here in order to avoid calling self.Format() twice
@@ -142,7 +141,7 @@ func MustNewRotatingFileHandler(
 // Basically, see if the supplied record would cause the file to exceed the
 // size limit we have.
 func (self *RotatingFileHandler) ShouldRollover(
-	record *logging.LogRecord) (bool, string) {
+	record *LogRecord) (bool, string) {
 
 	message := fmt.Sprintf("%s\n", self.Format(record))
 	if self.maxByte > 0 {
@@ -200,10 +199,10 @@ func (self *RotatingFileHandler) DoRollover() (err error) {
 	return nil
 }
 
-func (self *RotatingFileHandler) Emit(record *logging.LogRecord) error {
+func (self *RotatingFileHandler) Emit(record *LogRecord) error {
 	return self.RolloverEmit(self, record)
 }
 
-func (self *RotatingFileHandler) Handle(record *logging.LogRecord) int {
+func (self *RotatingFileHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }

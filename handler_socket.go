@@ -1,12 +1,11 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"net"
 )
 
 type SocketHandler struct {
-	*logging.BaseHandler
+	*BaseHandler
 	host         string
 	port         uint16
 	closeOnError bool
@@ -16,16 +15,16 @@ type SocketHandler struct {
 
 func NewSocketHandler(host string, port uint16) *SocketHandler {
 	object := &SocketHandler{
-		BaseHandler:  logging.NewBaseHandler("", logging.LevelNotset),
+		BaseHandler:  NewBaseHandler("", LevelNotset),
 		host:         host,
 		port:         port,
 		closeOnError: false,
 	}
-	logging.Closer.AddHandler(object)
+	Closer.AddHandler(object)
 	return object
 }
 
-func (self *SocketHandler) Serialize(record *logging.LogRecord) []byte {
+func (self *SocketHandler) Serialize(record *LogRecord) []byte {
 	// TODO serialize record using gob
 	return make([]byte, 0)
 }
@@ -35,16 +34,16 @@ func (self *SocketHandler) Send(bin []byte) error {
 	return nil
 }
 
-func (self *SocketHandler) Emit(record *logging.LogRecord) error {
+func (self *SocketHandler) Emit(record *LogRecord) error {
 	bin := self.Serialize(record)
 	return self.Send(bin)
 }
 
-func (self *SocketHandler) Handle(record *logging.LogRecord) int {
+func (self *SocketHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 
-func (self *SocketHandler) HandleError(record *logging.LogRecord, err error) {
+func (self *SocketHandler) HandleError(record *LogRecord, err error) {
 
 }
 

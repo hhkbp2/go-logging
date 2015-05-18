@@ -1,8 +1,7 @@
-package handlers
+package logging
 
 import (
 	"fmt"
-	"github.com/hhkbp2/go-logging"
 )
 
 // An interface to stream abstraction.
@@ -21,19 +20,19 @@ type Stream interface {
 // to a stream. Note that this class doesn't close the stream, as os.Stdin or
 // os.Stdout my be used. However a Close2() method is there for subclass.
 type StreamHandler struct {
-	*logging.BaseHandler
+	*BaseHandler
 	stream Stream
 }
 
 // Initialize a stream handler with name, logging level and underlying stream.
 func NewStreamHandler(
-	name string, level logging.LogLevelType, stream Stream) *StreamHandler {
+	name string, level LogLevelType, stream Stream) *StreamHandler {
 
 	object := &StreamHandler{
-		BaseHandler: logging.NewBaseHandler(name, level),
+		BaseHandler: NewBaseHandler(name, level),
 		stream:      stream,
 	}
-	logging.Closer.AddHandler(object)
+	Closer.AddHandler(object)
 	return object
 }
 
@@ -48,7 +47,7 @@ func (self *StreamHandler) SetStream(s Stream) {
 }
 
 // Emit a record.
-func (self *StreamHandler) Emit(record *logging.LogRecord) error {
+func (self *StreamHandler) Emit(record *LogRecord) error {
 	return self.Emit2(self, record)
 }
 
@@ -56,7 +55,7 @@ func (self *StreamHandler) Emit(record *logging.LogRecord) error {
 // If a formatter is specified, it is used to format the record.
 // The record is then written to the stream with a trailing newline.
 func (self *StreamHandler) Emit2(
-	handler logging.Handler, record *logging.LogRecord) error {
+	handler Handler, record *LogRecord) error {
 
 	message := handler.Format(record)
 	if err := self.stream.Write(fmt.Sprintf("%s\n", message)); err != nil {
@@ -69,7 +68,7 @@ func (self *StreamHandler) Emit2(
 }
 
 // Handle() function is for the usage of stream handler on its own.
-func (self *StreamHandler) Handle(record *logging.LogRecord) int {
+func (self *StreamHandler) Handle(record *LogRecord) int {
 	return self.BaseHandler.Handle2(self, record)
 }
 

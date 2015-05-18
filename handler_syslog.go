@@ -1,13 +1,12 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"log/syslog"
 )
 
 // A handler class which sends formatted logging records to a syslog server.
 type SyslogHandler struct {
-	*logging.BaseHandler
+	*BaseHandler
 	network  string
 	raddr    string
 	priority syslog.Priority
@@ -26,7 +25,7 @@ func NewSyslogHandler(
 		return nil, err
 	}
 	object := &SyslogHandler{
-		BaseHandler: logging.NewBaseHandler("", logging.LevelNotset),
+		BaseHandler: NewBaseHandler("", LevelNotset),
 		network:     "",
 		raddr:       "",
 		priority:    priority,
@@ -48,7 +47,7 @@ func NewSyslogHandlerToAddr(
 		return nil, err
 	}
 	object := &SyslogHandler{
-		BaseHandler: logging.NewBaseHandler("", logging.LevelNotset),
+		BaseHandler: NewBaseHandler("", LevelNotset),
 		network:     network,
 		raddr:       raddr,
 		priority:    priority,
@@ -61,19 +60,19 @@ func NewSyslogHandlerToAddr(
 // Emit a record.
 // The record is formatted, and then sent to the syslog server
 // in specified log level.
-func (self *SyslogHandler) Emit(record *logging.LogRecord) error {
+func (self *SyslogHandler) Emit(record *LogRecord) error {
 	message := self.BaseHandler.Format(record)
 	var err error
 	switch record.Level {
-	case logging.LevelFatal:
+	case LevelFatal:
 		err = self.writer.Crit(message)
-	case logging.LevelError:
+	case LevelError:
 		err = self.writer.Err(message)
-	case logging.LevelWarn:
+	case LevelWarn:
 		err = self.writer.Warning(message)
-	case logging.LevelInfo:
+	case LevelInfo:
 		err = self.writer.Info(message)
-	case logging.LevelDebug:
+	case LevelDebug:
 		err = self.writer.Debug(message)
 	default:
 		_, err = self.writer.Write([]byte(message))
@@ -81,7 +80,7 @@ func (self *SyslogHandler) Emit(record *logging.LogRecord) error {
 	return err
 }
 
-func (self *SyslogHandler) Handle(record *logging.LogRecord) int {
+func (self *SyslogHandler) Handle(record *LogRecord) int {
 	return self.BaseHandler.Handle2(self, record)
 }
 

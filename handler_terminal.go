@@ -1,7 +1,6 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"os"
 )
 
@@ -41,20 +40,20 @@ type TerminalHandler struct {
 
 func NewTerminalHandler() *TerminalHandler {
 	stream := NewStdoutStream()
-	handler := NewStreamHandler("stdout", logging.LevelNotset, stream)
+	handler := NewStreamHandler("stdout", LevelNotset, stream)
 	object := &TerminalHandler{
 		StreamHandler: handler,
 	}
-	logging.Closer.RemoveHandler(object.StreamHandler)
-	logging.Closer.AddHandler(object)
+	Closer.RemoveHandler(object.StreamHandler)
+	Closer.AddHandler(object)
 	return object
 }
 
-func (self *TerminalHandler) Emit(record *logging.LogRecord) error {
+func (self *TerminalHandler) Emit(record *LogRecord) error {
 	return self.StreamHandler.Emit2(self, record)
 }
 
-func (self *TerminalHandler) Handle(record *logging.LogRecord) int {
+func (self *TerminalHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 

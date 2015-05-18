@@ -1,7 +1,6 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"github.com/hhkbp2/testify/require"
 	"os"
 	"strings"
@@ -26,11 +25,11 @@ func removeFile(t *testing.T, filename string) {
 }
 
 func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
-	defer logging.Shutdown()
+	defer Shutdown()
 	handler, err := NewRotatingFileHandler(
 		testFileName, testFileMode, testRotateMaxByte, testRotateBackupCount)
 	require.Nil(t, err)
-	logger := logging.GetLogger("a")
+	logger := GetLogger("a")
 	logger.AddHandler(handler)
 	// every message is 99 byte, and \n
 	message := strings.Repeat("abcdefghij", 9) + "rstuvwxyz"
@@ -48,7 +47,7 @@ func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 }
 
 func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
-	defer logging.Shutdown()
+	defer Shutdown()
 	// clean up the existing log file
 	if FileExists(testFileName) {
 		require.Nil(t, os.Remove(testFileName))
@@ -57,7 +56,7 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	handler, err := NewRotatingFileHandler(
 		testFileName, os.O_APPEND, testRotateMaxByte, backupCount)
 	require.Nil(t, err)
-	logger := logging.GetLogger("b")
+	logger := GetLogger("b")
 	logger.AddHandler(handler)
 	message := strings.Repeat("abcdefghij", 9) + "rstuvwxyz"
 	size := uint64(len(message) + 1)

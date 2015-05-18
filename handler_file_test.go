@@ -1,7 +1,6 @@
-package handlers
+package logging
 
 import (
-	"github.com/hhkbp2/go-logging"
 	"github.com/hhkbp2/testify/require"
 	"io/ioutil"
 	"os"
@@ -16,7 +15,7 @@ var (
 func TestFileHandler(t *testing.T) {
 	handler, err := NewFileHandler(testFileName, testFileMode)
 	require.Nil(t, err)
-	logger := logging.GetLogger("a")
+	logger := GetLogger("a")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)
@@ -33,12 +32,12 @@ func TestFileHandler(t *testing.T) {
 
 func TestFileHandler_Asctime(t *testing.T) {
 	handler, err := NewFileHandler(testFileName, testFileMode)
-	formatter := logging.NewStandardFormatter(
+	formatter := NewStandardFormatter(
 		"%(asctime)s %(message)s",
 		"%Y-%m-%d %H:%M:%S %3n")
 	handler.SetFormatter(formatter)
 	require.Nil(t, err)
-	logger := logging.GetLogger("a")
+	logger := GetLogger("a")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)
