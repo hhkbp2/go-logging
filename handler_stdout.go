@@ -34,14 +34,14 @@ func (self *StdoutStream) Close() error {
 	return nil
 }
 
-type TerminalHandler struct {
+type StdoutHandler struct {
 	*StreamHandler
 }
 
-func NewTerminalHandler() *TerminalHandler {
+func NewStdoutHandler() *StdoutHandler {
 	stream := NewStdoutStream()
 	handler := NewStreamHandler("stdout", LevelNotset, stream)
-	object := &TerminalHandler{
+	object := &StdoutHandler{
 		StreamHandler: handler,
 	}
 	Closer.RemoveHandler(object.StreamHandler)
@@ -49,14 +49,14 @@ func NewTerminalHandler() *TerminalHandler {
 	return object
 }
 
-func (self *TerminalHandler) Emit(record *LogRecord) error {
+func (self *StdoutHandler) Emit(record *LogRecord) error {
 	return self.StreamHandler.Emit2(self, record)
 }
 
-func (self *TerminalHandler) Handle(record *LogRecord) int {
+func (self *StdoutHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 
-func (self *TerminalHandler) Close() {
+func (self *StdoutHandler) Close() {
 	self.StreamHandler.Close2()
 }

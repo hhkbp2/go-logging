@@ -4,9 +4,9 @@ import (
 	"testing"
 )
 
-func TestTerminalHandler(_ *testing.T) {
+func TestStdoutHandler(_ *testing.T) {
 	logger := GetLogger("a.b")
-	handler := NewTerminalHandler()
+	handler := NewStdoutHandler()
 	logger.AddHandler(handler)
 	logger.Warnf("test message")
 }

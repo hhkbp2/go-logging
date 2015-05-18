@@ -41,7 +41,7 @@ import (
 
 func main() {
 	logger := logging.GetLogger("a.b")
-	handler := logging.NewTerminalHandler()
+	handler := logging.NewStdoutHandler()
 	logger.AddHandler(handler)
 	logger.Warnf("message: %s %d", "Hello", 2015)
 }
