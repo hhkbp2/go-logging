@@ -12,7 +12,7 @@ func TestSyslogHandler(t *testing.T) {
 		syslog.LOG_USER|syslog.LOG_DEBUG,
 		"atag")
 	require.Nil(t, err)
-	logger := GetLogger("test")
+	logger := GetLogger("syslog")
 	logger.SetLevel(LevelDebug)
 	logger.AddHandler(handler)
 	prefix := "test syslog handler "

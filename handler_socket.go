@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	DefaultTimeout     = 1 * time.Second
-	DefaultDelay       = 1 * time.Second
-	DefaultMaxDeadline = 30 * time.Second
+	SocketDefaultTimeout     = 1 * time.Second
+	SocketDefaultDelay       = 1 * time.Second
+	SocketDefaultMaxDeadline = 30 * time.Second
 )
 
 // A SocketLogRecord instance contains all LogRecord fields tailored for
@@ -50,8 +50,8 @@ type SocketHandler struct {
 // on the next loggging call.
 func NewSocketHandler(host string, port uint16) *SocketHandler {
 	retry := NewErrorRetry().
-		Delay(DefaultDelay).
-		Deadline(DefaultMaxDeadline)
+		Delay(SocketDefaultDelay).
+		Deadline(SocketDefaultMaxDeadline)
 	object := &SocketHandler{
 		BaseHandler:  NewBaseHandler("", LevelNotset),
 		host:         host,
@@ -93,7 +93,7 @@ func (self *SocketHandler) Marshal(record *LogRecord) ([]byte, error) {
 // socket they want.
 func (self *SocketHandler) makeSocket() error {
 	address := fmt.Sprintf("%s:%d", self.host, self.port)
-	conn, err := net.DialTimeout("tcp", address, DefaultTimeout)
+	conn, err := net.DialTimeout("tcp", address, SocketDefaultTimeout)
 	if err != nil {
 		return err
 	}

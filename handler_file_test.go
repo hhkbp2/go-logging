@@ -15,7 +15,7 @@ var (
 func TestFileHandler(t *testing.T) {
 	handler, err := NewFileHandler(testFileName, testFileMode)
 	require.Nil(t, err)
-	logger := GetLogger("a")
+	logger := GetLogger("file1")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)
@@ -37,7 +37,7 @@ func TestFileHandler_Asctime(t *testing.T) {
 		"%Y-%m-%d %H:%M:%S %3n")
 	handler.SetFormatter(formatter)
 	require.Nil(t, err)
-	logger := GetLogger("a")
+	logger := GetLogger("file2")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)

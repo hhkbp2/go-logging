@@ -29,7 +29,7 @@ func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 	handler, err := NewRotatingFileHandler(
 		testFileName, testFileMode, testRotateMaxByte, testRotateBackupCount)
 	require.Nil(t, err)
-	logger := GetLogger("a")
+	logger := GetLogger("rfile1")
 	logger.AddHandler(handler)
 	// every message is 99 byte, and \n
 	message := strings.Repeat("abcdefghij", 9) + "rstuvwxyz"
@@ -56,7 +56,7 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	handler, err := NewRotatingFileHandler(
 		testFileName, os.O_APPEND, testRotateMaxByte, backupCount)
 	require.Nil(t, err)
-	logger := GetLogger("b")
+	logger := GetLogger("rfile2")
 	logger.AddHandler(handler)
 	message := strings.Repeat("abcdefghij", 9) + "rstuvwxyz"
 	size := uint64(len(message) + 1)

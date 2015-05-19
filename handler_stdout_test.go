@@ -5,7 +5,7 @@ import (
 )
 
 func TestStdoutHandler(_ *testing.T) {
-	logger := GetLogger("a.b")
+	logger := GetLogger("stdout")
 	handler := NewStdoutHandler()
 	logger.AddHandler(handler)
 	logger.Warnf("test message")

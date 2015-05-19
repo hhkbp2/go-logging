@@ -9,8 +9,9 @@ import (
 	"testing"
 )
 
-func SetupTestSocketServer(
+func _TestSetupSocketServer(
 	t *testing.T, host string, port uint16, received *list.List, ch chan int) {
+
 	address := fmt.Sprintf("%s:%d", host, port)
 	listener, err := net.Listen("tcp", address)
 	require.Nil(t, err)
@@ -35,9 +36,10 @@ func TestSocketHandler(t *testing.T) {
 	port := uint16(8082)
 	serverReceived := list.New()
 	ch := make(chan int)
-	SetupTestSocketServer(t, host, port, serverReceived, ch)
+	_TestSetupSocketServer(t, host, port, serverReceived, ch)
+	require.Equal(t, 0, serverReceived.Len())
 	handler := NewSocketHandler(host, port)
-	logger := GetLogger("a")
+	logger := GetLogger("socket")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)
