@@ -59,6 +59,7 @@ func NewSocketHandler(host string, port uint16) *SocketHandler {
 		closeOnError: true,
 		retry:        retry,
 	}
+	object.makeConn = object.makeSocket
 	Closer.AddHandler(object)
 	return object
 }
@@ -126,7 +127,9 @@ func (self *SocketHandler) Send(bin []byte) error {
 }
 
 // Emit a record.
-// Marshals the record and writes
+// Marshals the record and writes it to the socket in binary format.
+// If there is an error with the socket, silently drop the packet.
+// If there was a problem with the socket, re-establishes the socket.
 func (self *SocketHandler) Emit(record *LogRecord) error {
 	self.Format(record)
 	bin, err := self.Marshal(record)
@@ -140,6 +143,9 @@ func (self *SocketHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 
+// Handles an error during logging.
+// An error has occurred during logging. Most likely cause connection lost.
+// Close the socket so that we can retry on the next event.
 func (self *SocketHandler) HandleError(record *LogRecord, err error) {
 	if self.closeOnError && (self.conn != nil) {
 		self.conn.Close()
@@ -149,6 +155,7 @@ func (self *SocketHandler) HandleError(record *LogRecord, err error) {
 	}
 }
 
+// Close the socket.
 func (self *SocketHandler) Close() {
 	self.Lock()
 	defer self.Unlock()
