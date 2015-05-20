@@ -17,10 +17,10 @@ With an obivious intention to be a port of ```logging``` for Golang, ```go-loggi
 
 1. It supports logging level, logging sources(logger) and destinations(handler) customization and flexible combinations of them
 2. It supports logger hierarchy, optional filter on logger and handler, optional formatter on handler
-3. It supports handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(the corresponding servers are also provided as bundled) etc.
+3. It supports handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(e.g., thrift. For the corresponding servers, please refer to the unit test) etc.
 4. It could be configured throught handy config file in various format
 
-Please note that 3, 4 are under development and not fully ready at this moment.
+Please note that 4 are under development and not fully ready at this moment.
 
 ## Usage
 
