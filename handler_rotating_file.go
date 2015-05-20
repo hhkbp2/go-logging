@@ -7,8 +7,7 @@ import (
 
 // Check whether the specified directory/file exists or not.
 func FileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	if err != nil {
+	if _, err := os.Stat(filename); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
@@ -177,7 +176,7 @@ func (self *RotatingFileHandler) DoRollover() (err error) {
 	self.Close()
 	defer func() {
 		if e := self.Open(); e != nil {
-			if err == nil {
+			if e == nil {
 				err = e
 			}
 		}
@@ -199,6 +198,7 @@ func (self *RotatingFileHandler) DoRollover() (err error) {
 	return nil
 }
 
+// Emit a record.
 func (self *RotatingFileHandler) Emit(record *LogRecord) error {
 	return self.RolloverEmit(self, record)
 }
