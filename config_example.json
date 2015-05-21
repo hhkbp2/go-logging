@@ -39,10 +39,10 @@
     },
     "filters" : {
         "f1" : {
-            "name" : "f1"
+            "name" : "l1"
         },
         "f2" : {
-            "name" : "f2"
+            "name" : "l2"
         }
     }
 }
