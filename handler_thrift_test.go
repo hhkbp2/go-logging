@@ -3,8 +3,8 @@ package logging
 import (
 	"container/list"
 	"fmt"
-	gen "gen-go/logging"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	gen "github.com/hhkbp2/go-logging/gen-go/logging"
 	"github.com/hhkbp2/testify/require"
 	"testing"
 )
