@@ -110,7 +110,6 @@ For more examples please refer to the test cases in source code.
 For docs, refer to: 
 
 [https://gowalker.org/github.com/hhkbp2/go-logging](https://gowalker.org/github.com/hhkbp2/go-logging)  
-[https://gowalker.org/github.com/hhkbp2/go-logging/handlers](https://gowalker.org/github.com/hhkbp2/go-logging/handlers)
 
 For much more details please refer to the documentation for [```logging```][python-logging-page].
 
