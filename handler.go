@@ -21,7 +21,7 @@ type Handler interface {
 	// Format the specified record.
 	Formatter
 	// Set the formatter for this Handler.
-	SetFormatter(formater Formatter)
+	SetFormatter(formatter Formatter)
 
 	// For Filter managing.
 	Filterer

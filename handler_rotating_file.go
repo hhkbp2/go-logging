@@ -75,17 +75,17 @@ func (self *BaseRotatingHandler) RolloverEmit(
 // the next when the current file reaches a certain size.
 type RotatingFileHandler struct {
 	*BaseRotatingHandler
-	maxByte     uint64
+	maxBytes    uint64
 	backupCount uint32
 }
 
 // Open the specified file and use it as the stream for logging.
 //
 // By default, the file grows indefinitely. You can specify particular values
-// of maxByte and backupCount to allow the file to rollover at a predetermined
+// of maxBytes and backupCount to allow the file to rollover at a predetermined
 // size.
 //
-// Rollover occurs whenever the current log file is nearly maxByte in length.
+// Rollover occurs whenever the current log file is nearly maxBytes in length.
 // If backupCount is >= 1, the system will successively create new files with
 // the same pathname as the base file, but with extensions ".1", ".2" etc.
 // append to it. For example, with a backupCount of 5 and a base file name of
@@ -95,11 +95,11 @@ type RotatingFileHandler struct {
 // "app.log.1", "app.log.2" etc. exist, then they are renamed to "app.log.2",
 // "app.log.3" etc. respectively.
 //
-// If maxByte is zero, rollover never occurs.
+// If maxBytes is zero, rollover never occurs.
 func NewRotatingFileHandler(
 	filepath string,
 	mode int,
-	maxByte uint64,
+	maxBytes uint64,
 	backupCount uint32) (*RotatingFileHandler, error) {
 
 	// If rotation/rollover is wanted, it doesn't make sense to use another
@@ -107,7 +107,7 @@ func NewRotatingFileHandler(
 	// runs of the calling application, the logs from previous runs would be
 	// lost if the "os.O_TRUNC" is respected, because the log file would be
 	// truncated on each run.
-	if maxByte > 0 {
+	if maxBytes > 0 {
 		mode = os.O_APPEND
 	}
 	base, err := NewBaseRotatingHandler(filepath, mode)
@@ -116,7 +116,7 @@ func NewRotatingFileHandler(
 	}
 	object := &RotatingFileHandler{
 		BaseRotatingHandler: base,
-		maxByte:             maxByte,
+		maxBytes:            maxBytes,
 		backupCount:         backupCount,
 	}
 	return object, nil
@@ -125,11 +125,11 @@ func NewRotatingFileHandler(
 func MustNewRotatingFileHandler(
 	filepath string,
 	mode int,
-	maxByte uint64,
+	maxBytes uint64,
 	backupCount uint32) *RotatingFileHandler {
 
 	handler, err := NewRotatingFileHandler(
-		filepath, mode, maxByte, backupCount)
+		filepath, mode, maxBytes, backupCount)
 	if err != nil {
 		panic("NewRotatingFileHandler(), error: " + err.Error())
 	}
@@ -143,13 +143,13 @@ func (self *RotatingFileHandler) ShouldRollover(
 	record *LogRecord) (bool, string) {
 
 	message := fmt.Sprintf("%s\n", self.Format(record))
-	if self.maxByte > 0 {
+	if self.maxBytes > 0 {
 		offset, err := self.GetStream().Tell()
 		if err != nil {
 			// don't trigger rollover action if we lose offset info
 			return false, message
 		}
-		if (uint64(offset) + uint64(len(message))) > self.maxByte {
+		if (uint64(offset) + uint64(len(message))) > self.maxBytes {
 			return true, message
 		}
 	}

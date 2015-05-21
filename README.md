@@ -17,7 +17,7 @@ With an obivious intention to be a port of ```logging``` for Golang, ```go-loggi
 
 1. It supports logging level, logging sources(logger) and destinations(handler) customization and flexible combinations of them
 2. It supports logger hierarchy, optional filter on logger and handler, optional formatter on handler
-3. It supports handlers that frequently-used in most real production enviroments, e.g. it could write log events to file, syslog, socket, rpc(e.g., thrift. For the corresponding servers, please refer to the unit test) etc.
+3. It supports handlers that frequently-used in most real production enviroments, e.g. it could write log events to stdout, memory, file, syslog, socket, rpc(e.g., thrift. For the corresponding servers, please refer to the unit test) etc.
 4. It could be configured throught handy config file in various format
 
 Please note that 4 are under development and not fully ready at this moment.
@@ -67,13 +67,13 @@ func main() {
 	filePath := "./test.log"
 	fileMode := os.O_APPEND
 	// set the maximum size of every file to 100 M bytes
-	fileMaxByte := uint64(100 * 1024 * 1024)
+	fileMaxBytes := uint64(100 * 1024 * 1024)
 	// keep 9 backup at most(including the current using one,
 	// there could be 10 log file at most)
 	backupCount := uint32(9)
 	// create a handler(which represents a log message destination)
 	handler := logging.MustNewRotatingFileHandler(
-		filePath, fileMode, fileMaxByte, backupCount)
+		filePath, fileMode, fileMaxBytes, backupCount)
 
 	// the format for the whole log message
 	format := "%(asctime)s %(levelname)s (%(filename)s:%(lineno)d) " +
