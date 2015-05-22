@@ -40,7 +40,8 @@ type SocketHandler struct {
 	port         uint16
 	closeOnError bool
 	retry        Retry
-	makeConn     func() error
+	makeConnFunc func() error
+	sendFunc     func(bin []byte) error
 	conn         net.Conn
 }
 
@@ -59,7 +60,8 @@ func NewSocketHandler(host string, port uint16) *SocketHandler {
 		closeOnError: true,
 		retry:        retry,
 	}
-	object.makeConn = object.makeSocket
+	object.makeConnFunc = object.makeTCPSocket
+	object.sendFunc = object.sendTCP
 	Closer.AddHandler(object)
 	return object
 }
@@ -91,9 +93,9 @@ func (self *SocketHandler) Marshal(record *LogRecord) ([]byte, error) {
 
 // A factory method which allows succlasses to define the precise type of
 // socket they want.
-func (self *SocketHandler) makeSocket() error {
+func (self *SocketHandler) makeSocket(network string) error {
 	address := fmt.Sprintf("%s:%d", self.host, self.port)
-	conn, err := net.DialTimeout("tcp", address, SocketDefaultTimeout)
+	conn, err := net.DialTimeout(network, address, SocketDefaultTimeout)
 	if err != nil {
 		return err
 	}
@@ -101,13 +103,21 @@ func (self *SocketHandler) makeSocket() error {
 	return nil
 }
 
-// Try to create a socket, using an exponential backoff with a deadline time.
-func (self *SocketHandler) createSocket() error {
-	return self.retry.Do(self.makeConn)
+func (self *SocketHandler) makeTCPSocket() error {
+	return self.makeSocket("tcp")
 }
 
-// Send a marshaled binary to the socket.
-func (self *SocketHandler) Send(bin []byte) error {
+func (self *SocketHandler) makeUDPSocket() error {
+	return self.makeSocket("udp")
+}
+
+// Try to create a socket, using an exponential backoff with a deadline time.
+func (self *SocketHandler) createSocket() error {
+	return self.retry.Do(self.makeConnFunc)
+}
+
+// Send a marshaled binary to the tcp socket.
+func (self *SocketHandler) sendTCP(bin []byte) error {
 	if self.conn == nil {
 		err := self.createSocket()
 		if err != nil {
@@ -126,6 +136,18 @@ func (self *SocketHandler) Send(bin []byte) error {
 	return nil
 }
 
+// Send a marshaled binary to the udp socket.
+func (self *SocketHandler) sendUDP(bin []byte) error {
+	if self.conn == nil {
+		err := self.createSocket()
+		if err != nil {
+			return err
+		}
+	}
+	_, err := self.conn.Write(bin)
+	return err
+}
+
 // Emit a record.
 // Marshals the record and writes it to the socket in binary format.
 // If there is an error with the socket, silently drop the packet.
@@ -136,7 +158,7 @@ func (self *SocketHandler) Emit(record *LogRecord) error {
 	if err != nil {
 		return err
 	}
-	return self.Send(bin)
+	return self.sendFunc(bin)
 }
 
 func (self *SocketHandler) Handle(record *LogRecord) int {

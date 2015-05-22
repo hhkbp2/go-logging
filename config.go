@@ -515,6 +515,16 @@ func DictConfig(conf *Conf) error {
 			if err != nil {
 				return err
 			}
+		case "DatagramHandler":
+			host, err := m.GetString("host")
+			if err != nil {
+				return err
+			}
+			port, err := m.GetUint16("port")
+			if err != nil {
+				return err
+			}
+			handler = NewDatagramHandler(host, port)
 		case "SocketHandler":
 			host, err := m.GetString("host")
 			if err != nil {

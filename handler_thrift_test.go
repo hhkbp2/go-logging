@@ -29,7 +29,7 @@ func (self *TestThriftServerHandler) Report(record *gen.ThriftLogRecord) error {
 	return nil
 }
 
-func _TestSetupThriftServer(
+func _testSetupThriftServer(
 	t *testing.T, host string, port uint16, received *list.List, ch chan int) thrift.TServer {
 
 	handler := NewTestThriftServerHandler(received, ch)
@@ -56,7 +56,7 @@ func TestThriftHandler(t *testing.T) {
 	port := uint16(8082)
 	serverReceived := list.New()
 	ch := make(chan int, 1)
-	server := _TestSetupThriftServer(t, host, port, serverReceived, ch)
+	server := _testSetupThriftServer(t, host, port, serverReceived, ch)
 	require.Equal(t, 0, serverReceived.Len())
 	handler := NewThriftHandler(host, port)
 	logger := GetLogger("thrift")

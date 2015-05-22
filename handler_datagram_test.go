@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"bytes"
 	"container/list"
 	"encoding/gob"
 	"fmt"
@@ -9,37 +10,37 @@ import (
 	"testing"
 )
 
-func _testSetupSocketServer(
+func _testSetupDatagramServer(
 	t *testing.T, host string, port uint16, received *list.List, ch chan int) {
 
-	address := fmt.Sprintf("%s:%d", host, port)
-	listener, err := net.Listen("tcp", address)
+	address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", host, port))
+	require.Nil(t, err)
+	conn, err := net.ListenUDP("udp", address)
 	require.Nil(t, err)
 	go func() {
-		conn, err := listener.Accept()
+		bin := make([]byte, 1024)
+		n, _, err := conn.ReadFromUDP(bin)
 		require.Nil(t, err)
-		defer listener.Close()
-		go func(conn net.Conn) {
-			defer conn.Close()
-			decoder := gob.NewDecoder(conn)
-			var record SocketLogRecord
-			err := decoder.Decode(&record)
-			require.Nil(t, err)
-			received.PushBack(*record.Message)
-			ch <- 1
-		}(conn)
+		defer conn.Close()
+		buf := bytes.NewBuffer(bin[:n])
+		decoder := gob.NewDecoder(buf)
+		var record SocketLogRecord
+		err = decoder.Decode(&record)
+		require.Nil(t, err)
+		received.PushBack(*record.Message)
+		ch <- 1
 	}()
 }
 
-func TestSocketHandler(t *testing.T) {
+func TestDatagramHandler(t *testing.T) {
 	host := "127.0.0.1"
 	port := uint16(8082)
 	serverReceived := list.New()
 	ch := make(chan int)
-	_testSetupSocketServer(t, host, port, serverReceived, ch)
+	_testSetupDatagramServer(t, host, port, serverReceived, ch)
 	require.Equal(t, 0, serverReceived.Len())
-	handler := NewSocketHandler(host, port)
-	logger := GetLogger("socket")
+	handler := NewDatagramHandler(host, port)
+	logger := GetLogger("datagram")
 	logger.AddHandler(handler)
 	message := "test"
 	logger.Errorf(message)
