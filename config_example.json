@@ -2,18 +2,19 @@
     "version": 1,
     "root" : {
         "level": "NOTSET",
-        "propagate" : true
+        "propagate" : true,
+        "handlers" : []
     },
     "loggers" : {
-        "l1" : {
+        "a.b" : {
             "level" : "DEBUG",
-            "propagate" : false,
+            "propagate" : true,
             "filters" : ["f1"],
             "handlers" : ["h1"]
         },
-        "l2" : {
+        "a" : {
             "level" : "WARN",
-            "propagate" : true,
+            "propagate" : false,
             "filters" : ["f2"],
             "handlers" : ["h2"]
         }
@@ -21,28 +22,32 @@
     "handlers" : {
         "h1" : {
             "class" : "NullHandler",
-            "level" : "ERROR"
+            "level" : "INFO",
+            "formatter" : "ft1"
         },
         "h2" : {
             "class" : "FileHandler",
-            "level" : "DEBUG",
+            "level" : "ERROR",
             "filename" : "./test.log",
-            "mode" : "O_APPEND",
-            "formatter" : "ft1"
+            "mode" : "O_TRUNC",
+            "formatter" : "ft2"
         }
     },
     "formatters" : {
         "ft1" : {
             "format" : "%(asctime)s %(levelname)s %(name)s %(message)s",
             "datefmt" : "%Y-%m-%d %H:%M:%S.%3n"
+        },
+        "ft2" : {
+            "format" : "%(message)s"
         }
     },
     "filters" : {
         "f1" : {
-            "name" : "l1"
+            "name" : "a.b"
         },
         "f2" : {
-            "name" : "l2"
+            "name" : "a"
         }
     }
 }

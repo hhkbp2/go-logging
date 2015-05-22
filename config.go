@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log/syslog"
 	"os"
@@ -57,6 +58,32 @@ var (
 	}
 )
 
+// Apply all configuration in specified json file.
+func ApplyJsonConfigFile(file string) error {
+	bin, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	var conf Conf
+	if err = json.Unmarshal(bin, &conf); err != nil {
+		return err
+	}
+	return DictConfig(&conf)
+}
+
+// Apply all configuration in specified yaml file.
+func ApplyYAMLConfigFile(file string) error {
+	bin, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	var conf Conf
+	if err = yaml.Unmarshal(bin, &conf); err != nil {
+		return err
+	}
+	return DictConfig(&conf)
+}
+
 type ConfFilter struct {
 	Name string `json:"name"`
 }
@@ -66,6 +93,8 @@ type ConfFormatter struct {
 	DateFormat *string `json:"datefmt"`
 }
 
+// A map represents configuration of various key and variable length.
+// Access it just in raw key after parsed from config file.
 type ConfMap map[string]interface{}
 
 func (self ConfMap) GetBool(key string) (bool, error) {
@@ -167,23 +196,6 @@ func NewConfigEnv() *ConfEnv {
 		formatters: make(map[string]Formatter),
 		filters:    make(map[string]Filter),
 	}
-}
-
-func ApplyJsonConfigFile(file string) error {
-	bin, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	var conf Conf
-	if err = json.Unmarshal(bin, &conf); err != nil {
-		return err
-	}
-	return DictConfig(&conf)
-}
-
-func ApplyXMLConfigFile(file string) error {
-	// TODO
-	return nil
 }
 
 type SetLevelable interface {

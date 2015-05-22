@@ -1,0 +1,38 @@
+version: 1
+root:
+    level: NOTSET
+    propagate: true
+    handlers: []
+loggers:
+    a.b:
+        level: DEBUG
+        propagate: true
+        filters: [f1]
+        handlers: [h1]
+    a:
+        level: WARN
+        propagate: false
+        filters: [f2]
+        handlers: [h2]
+handlers:
+    h1:
+        class: NullHandler
+        level: INFO
+        formatter: ft1
+    h2:
+        class: FileHandler
+        level: ERROR
+        filename: ./test.log
+        mode: O_TRUNC
+        formatter: ft2
+formatters:
+    ft1:
+        format: "%(asctime)s %(levelname)s %(name)s %(message)s"
+        datefmt: "%Y-%m-%d %H:%M:%S.%3n"
+    ft2:
+        format: "%(message)s"
+filters:
+    f1:
+        name: a.b
+    f2:
+        name: a
