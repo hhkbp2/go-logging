@@ -103,7 +103,52 @@ Compile and run the code above, it would generate a log file "./test.log" under 
 2015-04-04 14:20:33.714 INFO (main2.go:40) a.b.c message: Hello 2015
 ```
 
-For more examples please refer to the test cases in source code.
+#### Example 3: Config Log via configuration file.
+
+Write a configuration file ```config.xml``` as the following:
+
+```go
+formatters:
+    f:
+        format: "%(asctime)s %(levelname)s (%(filename)s:%(lineno)d) %(name)s %(message)s"
+        datefmt: "%Y-%m-%d %H:%M:%S.%3n"
+handlers:
+    h:
+        class: RotatingFileHandler
+        filepath: "./test.log"
+        mode: O_APPEND
+        # 100 * 1024 * 1024 -> 100M
+        maxBytes: 104857600
+        backupCount: 9
+        formatter: f
+loggers:
+    a.b.c:
+        level: INFO
+        handlers: [h]
+
+```
+
+and use it to config logging facility like:
+
+```go
+package main
+
+import (
+	"github.com/hhkbp2/go-logging"
+)
+
+func main() {
+	config_file := "./config.yml"
+	if err := logging.ApplyConfigFile(config_file); err != nil {
+		panic(err.Error())
+	}
+	logger := logging.GetLogger("a.b.c")
+	defer logging.Shutdown()
+	logger.Infof("message: %s %d", "Hello", 2015)
+}
+```
+
+It will write log as the same as the above example 2.
 
 ## Documentation
 

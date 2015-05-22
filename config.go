@@ -147,8 +147,12 @@ func (self ConfMap) GetUint16(key string) (uint16, error) {
 	}
 	i, ok := value.(uint16)
 	if !ok {
-		return 0, errors.New(fmt.Sprintf(
-			"value: %#v of key: %s should be of type uint16", value, key))
+		j, ok := value.(int)
+		if !ok {
+			return 0, errors.New(fmt.Sprintf(
+				"value: %#v of key: %s should be of type uint16", value, key))
+		}
+		i = uint16(j)
 	}
 	return i, nil
 }
@@ -160,8 +164,12 @@ func (self ConfMap) GetUint32(key string) (uint32, error) {
 	}
 	i, ok := value.(uint32)
 	if !ok {
-		return 0, errors.New(fmt.Sprintf(
-			"value: %#v of key: %s should be of type uint32", value, key))
+		j, ok := value.(int)
+		if !ok {
+			return 0, errors.New(fmt.Sprintf(
+				"value: %#v of key: %s should be of type uint32", value, key))
+		}
+		i = uint32(j)
 	}
 	return i, nil
 }
@@ -173,8 +181,12 @@ func (self ConfMap) GetUint64(key string) (uint64, error) {
 	}
 	i, ok := value.(uint64)
 	if !ok {
-		return 0, errors.New(fmt.Sprintf(
-			"value: %#v of key: %s should be of type uint64", value, key))
+		j, ok := value.(int)
+		if !ok {
+			return 0, errors.New(fmt.Sprintf(
+				"value: %#v of key: %s should be of type uint64", value, key))
+		}
+		i = uint64(j)
 	}
 	return i, nil
 }
@@ -330,7 +342,7 @@ func ConfigLogger(m ConfMap, logger Logger, isRoot bool, env *ConfEnv) error {
 func DictConfig(conf *Conf) error {
 	env := NewConfigEnv()
 	// check version for compatibility.  Currently only version 1 is supported.
-	if conf.Version != 1 {
+	if (conf.Version != 0) && (conf.Version != 1) {
 		return errors.New(fmt.Sprintf("unsupport version: %d", conf.Version))
 	}
 	// initialize all filters as specified
@@ -438,9 +450,13 @@ func DictConfig(conf *Conf) error {
 			if err != nil {
 				return err
 			}
-			mode, err := m.GetInt("mode")
+			modeStr, err := m.GetString("mode")
 			if err != nil {
 				return err
+			}
+			mode, ok := FileModeNameToValues[modeStr]
+			if !ok {
+				return errors.New(fmt.Sprintf("unknown file mode: %s", modeStr))
 			}
 			maxBytes, err := m.GetUint64("maxBytes")
 			if err != nil {
