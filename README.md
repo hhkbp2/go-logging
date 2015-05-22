@@ -152,7 +152,7 @@ It will write log as the same as the above example 2.
 
 For docs, refer to: 
 
-[https://gowalker.org/github.com/hhkbp2/go-logging](https://gowalker.org/github.com/hhkbp2/go-logging)  
+[https://godoc.org/github.com/hhkbp2/go-logging](https://godoc.org/github.com/hhkbp2/go-logging)
 
 For much more details please refer to the documentation for [```logging```][python-logging-page].
 
