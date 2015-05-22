@@ -3,6 +3,7 @@ package logging
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log/syslog"
 	"os"
@@ -10,22 +11,8 @@ import (
 )
 
 var (
-	ErrorConfigVersionUnsupport    = errors.New("unsupport version")
-	ErrorConfigInvalidType         = errors.New("invalid type")
-	ErrorConfigUnknownLevel        = errors.New("unknown level")
-	ErrorConfigUnknownFileMode     = errors.New("unknown file mode")
-	ErrorConfigInvalidHandler      = errors.New("invalid handler")
-	ErrorConfigInvalidFormatter    = errors.New("invalid formatter")
-	ErrorConfigInvalidFilter       = errors.New("invalid filter")
-	ErrorConfigIDMissing           = errors.New("id missing")
-	ErrorConfigIDAlreadyExists     = errors.New("id already exists")
-	ErrorConfigHandlerClassMissing = errors.New("handler class missing")
-	ErrorConfigUnknownHandlerClass = errors.New("unknown handler class")
-	ErrorConfigMapNoSuchKey        = errors.New("map has no such key")
-	ErrorConfigMapValueTypeMistach = errors.New("value type mismatch")
-	ErrorConfigNoSuchHandler       = errors.New("no such handler")
-)
-var (
+	// A map from string description to file modes.
+	// The string descriptions are used in configuration file.
 	FileModeNameToValues = map[string]int{
 		"O_RDONLY": os.O_RDONLY,
 		"O_WRONLY": os.O_WRONLY,
@@ -36,6 +23,8 @@ var (
 		"O_SYNC":   os.O_SYNC,
 		"O_TRUNC":  os.O_TRUNC,
 	}
+	// A map from string description to syslog priority.
+	// The string descriptions are used in configuration file.
 	SyslogNameToPriorities = map[string]syslog.Priority{
 		"LOG_EMERG":    syslog.LOG_EMERG,
 		"LOG_ALERT":    syslog.LOG_ALERT,
@@ -82,11 +71,12 @@ type ConfMap map[string]interface{}
 func (self ConfMap) GetBool(key string) (bool, error) {
 	value, ok := self[key]
 	if !ok {
-		return false, ErrorConfigMapNoSuchKey
+		return false, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	b, ok := value.(bool)
 	if !ok {
-		return false, ErrorConfigMapValueTypeMistach
+		return false, errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type bool", value, key))
 	}
 	return b, nil
 }
@@ -94,11 +84,12 @@ func (self ConfMap) GetBool(key string) (bool, error) {
 func (self ConfMap) GetInt(key string) (int, error) {
 	value, ok := self[key]
 	if !ok {
-		return 0, ErrorConfigMapNoSuchKey
+		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	i, ok := value.(int)
 	if !ok {
-		return 0, ErrorConfigMapValueTypeMistach
+		return 0, errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type int", value, key))
 	}
 	return i, nil
 }
@@ -106,11 +97,12 @@ func (self ConfMap) GetInt(key string) (int, error) {
 func (self ConfMap) GetUint16(key string) (uint16, error) {
 	value, ok := self[key]
 	if !ok {
-		return 0, ErrorConfigMapNoSuchKey
+		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	i, ok := value.(uint16)
 	if !ok {
-		return 0, ErrorConfigMapValueTypeMistach
+		return 0, errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type uint16", value, key))
 	}
 	return i, nil
 }
@@ -118,11 +110,12 @@ func (self ConfMap) GetUint16(key string) (uint16, error) {
 func (self ConfMap) GetUint32(key string) (uint32, error) {
 	value, ok := self[key]
 	if !ok {
-		return 0, ErrorConfigMapNoSuchKey
+		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	i, ok := value.(uint32)
 	if !ok {
-		return 0, ErrorConfigMapValueTypeMistach
+		return 0, errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type uint32", value, key))
 	}
 	return i, nil
 }
@@ -130,11 +123,12 @@ func (self ConfMap) GetUint32(key string) (uint32, error) {
 func (self ConfMap) GetUint64(key string) (uint64, error) {
 	value, ok := self[key]
 	if !ok {
-		return 0, ErrorConfigMapNoSuchKey
+		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	i, ok := value.(uint64)
 	if !ok {
-		return 0, ErrorConfigMapValueTypeMistach
+		return 0, errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type uint64", value, key))
 	}
 	return i, nil
 }
@@ -142,11 +136,12 @@ func (self ConfMap) GetUint64(key string) (uint64, error) {
 func (self ConfMap) GetString(key string) (string, error) {
 	value, ok := self[key]
 	if !ok {
-		return "", ErrorConfigMapNoSuchKey
+		return "", errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
 	str, ok := value.(string)
 	if !ok {
-		return "", ErrorConfigMapValueTypeMistach
+		return "", errors.New(fmt.Sprintf(
+			"value: %#v of key: %s should be of type string", value, key))
 	}
 	return str, nil
 }
@@ -199,12 +194,13 @@ func ConfigLevel(m ConfMap, i SetLevelable) error {
 	if arg, ok := m["level"]; ok {
 		levelIn, ok := arg.(string)
 		if !ok {
-			return ErrorConfigInvalidType
+			return errors.New(fmt.Sprintf(
+				"level value: %#v should be of type string", arg))
 		}
 		levelIn = strings.ToUpper(levelIn)
 		level, ok := nameToLevels[levelIn]
 		if !ok {
-			return ErrorConfigUnknownLevel
+			return errors.New(fmt.Sprintf("unknown level: %s", levelIn))
 		}
 		return i.SetLevel(level)
 	}
@@ -219,11 +215,12 @@ func ConfigFormatters(m ConfMap, i SetFormatterable, env *ConfEnv) error {
 	if arg, ok := m["formatter"]; ok {
 		name, ok := arg.(string)
 		if !ok {
-			return ErrorConfigInvalidType
+			return errors.New(fmt.Sprintf(
+				"formatter value: %#v should be of type string", arg))
 		}
 		formatter, ok := env.formatters[name]
 		if !ok {
-			return ErrorConfigInvalidFormatter
+			return errors.New(fmt.Sprintf("unknown formatter: %s", name))
 		}
 		i.SetFormatter(formatter)
 	}
@@ -238,16 +235,18 @@ func ConfigHandlers(m ConfMap, i AddHandlerable, env *ConfEnv) error {
 	if arg, ok := m["handlers"]; ok {
 		handlersIn, ok := arg.([]interface{})
 		if !ok {
-			return ErrorConfigInvalidType
+			return errors.New(fmt.Sprintf(
+				"handlers value: %#v should be of type string slice", arg))
 		}
 		for _, h := range handlersIn {
 			name, ok := h.(string)
 			if !ok {
-				return ErrorConfigInvalidType
+				return errors.New(fmt.Sprintf(
+					"%#v in handlers should be of type string", h))
 			}
 			handler, ok := env.handlers[name]
 			if !ok {
-				return ErrorConfigInvalidHandler
+				return errors.New(fmt.Sprintf("unknown handler: %s", name))
 			}
 			i.AddHandler(handler)
 		}
@@ -259,16 +258,18 @@ func ConfigFilters(m ConfMap, i Filterer, env *ConfEnv) error {
 	if arg, ok := m["filters"]; ok {
 		filtersIn, ok := arg.([]interface{})
 		if !ok {
-			return ErrorConfigInvalidType
+			return errors.New(fmt.Sprintf(
+				"filters value: %#v should be of type string slice", arg))
 		}
 		for _, f := range filtersIn {
 			name, ok := f.(string)
 			if !ok {
-				return ErrorConfigInvalidType
+				return errors.New(fmt.Sprintf(
+					"%#v in filters should be of type string", f))
 			}
 			filter, ok := env.filters[name]
 			if !ok {
-				return ErrorConfigInvalidFilter
+				return errors.New(fmt.Sprintf("unknown filter: %s", name))
 			}
 			i.AddFilter(filter)
 		}
@@ -285,7 +286,8 @@ func ConfigLogger(m ConfMap, logger Logger, isRoot bool, env *ConfEnv) error {
 		if arg, ok := m["propagate"]; ok {
 			propagate, ok := arg.(bool)
 			if !ok {
-				return ErrorConfigInvalidType
+				return errors.New(fmt.Sprintf(
+					"propagate value: %#v should be of type bool", arg))
 			}
 			logger.SetPropagate(propagate)
 		}
@@ -300,27 +302,28 @@ func DictConfig(conf *Conf) error {
 	env := NewConfigEnv()
 	// check version for compatibility.  Currently only version 1 is supported.
 	if conf.Version != 1 {
-		return ErrorConfigVersionUnsupport
+		return errors.New(fmt.Sprintf("unsupport version: %d", conf.Version))
 	}
 	// initialize all filters as specified
 	for name, conf := range conf.Filters {
 		// reject empty name
 		if len(name) == 0 {
-			return ErrorConfigIDMissing
+			return errors.New("filter should have non-empty ID")
 		}
 		// reject duplicate name
 		if _, ok := env.filters[name]; ok {
-			return ErrorConfigIDAlreadyExists
+			return errors.New(fmt.Sprintf("filter id: %s already exists", name))
 		}
 		env.filters[name] = NewNameFilter(conf.Name)
 	}
 	// initialize all formatters as specified
 	for name, conf := range conf.Formatters {
 		if len(name) == 0 {
-			return ErrorConfigIDMissing
+			return errors.New("formatter should have non-empty ID")
 		}
 		if _, ok := env.formatters[name]; ok {
-			return ErrorConfigIDAlreadyExists
+			return errors.New(fmt.Sprintf(
+				"formatter id: %s already exists", name))
 		}
 		var format, dateFormat string
 		if conf.Format != nil {
@@ -338,18 +341,21 @@ func DictConfig(conf *Conf) error {
 	// initialize all handlers as specified
 	for name, m := range conf.Handlers {
 		if len(name) == 0 {
-			return ErrorConfigIDMissing
+			return errors.New("handler should have non-empty ID")
 		}
 		if _, ok := env.handlers[name]; ok {
-			return ErrorConfigIDAlreadyExists
+			return errors.New(fmt.Sprintf(
+				"handler id: %s already exists", name))
 		}
 		arg, ok := m["class"]
 		if !ok {
-			return ErrorConfigHandlerClassMissing
+			return errors.New(fmt.Sprintf(
+				"handler id: %s should specify class", name))
 		}
 		className, ok := arg.(string)
 		if !ok {
-			return ErrorConfigInvalidType
+			return errors.New(fmt.Sprintf(
+				"handler id: %s class should be of type string"))
 		}
 		var handler Handler
 		switch className {
@@ -367,7 +373,7 @@ func DictConfig(conf *Conf) error {
 			levelStr = strings.ToUpper(levelStr)
 			level, ok := nameToLevels[levelStr]
 			if !ok {
-				return ErrorConfigUnknownLevel
+				return errors.New(fmt.Sprintf("unknown level: %s", levelStr))
 			}
 			handlerName, err := m.GetString("target")
 			if err != nil {
@@ -375,7 +381,8 @@ func DictConfig(conf *Conf) error {
 			}
 			target, ok := env.handlers[handlerName]
 			if !ok {
-				return ErrorConfigNoSuchHandler
+				return errors.New(fmt.Sprintf(
+					"target handler id: %s not exists", handlerName))
 			}
 			handler = NewMemoryHandler(capacity, level, target)
 		case "StdoutHandler":
@@ -391,7 +398,7 @@ func DictConfig(conf *Conf) error {
 			}
 			mode, ok := FileModeNameToValues[modeStr]
 			if !ok {
-				return ErrorConfigUnknownFileMode
+				return errors.New(fmt.Sprintf("unknown file mode: %s", modeStr))
 			}
 			handler, err = NewFileHandler(filename, mode)
 			if err != nil {
@@ -452,7 +459,8 @@ func DictConfig(conf *Conf) error {
 			}
 			priority, ok := SyslogNameToPriorities[priorityStr]
 			if !ok {
-				return ErrorConfigMapValueTypeMistach
+				return errors.New(fmt.Sprintf(
+					"unknown priority: %s", priorityStr))
 			}
 			tag, err := m.GetString("tag")
 			if err != nil {
@@ -483,7 +491,7 @@ func DictConfig(conf *Conf) error {
 			}
 			handler = NewThriftHandler(host, port)
 		default:
-			return ErrorConfigUnknownHandlerClass
+			return errors.New(fmt.Sprintf("unsupported class name: %s", className))
 		}
 		if err := ConfigLevel(m, handler); err != nil {
 			return err
@@ -505,7 +513,7 @@ func DictConfig(conf *Conf) error {
 	// initialize all loggers as specified
 	for name, m := range conf.Loggers {
 		if len(name) == 0 {
-			return ErrorConfigIDMissing
+			return errors.New("logger should have non-empty ID")
 		}
 		logger := GetLogger(name)
 		if err := ConfigLogger(m, logger, false, env); err != nil {

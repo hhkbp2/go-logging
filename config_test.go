@@ -14,5 +14,5 @@ func TestDictConfig_UnsupportVersion(t *testing.T) {
 	conf := &Conf{
 		Version: 2,
 	}
-	require.Equal(t, ErrorConfigVersionUnsupport, DictConfig(conf))
+	require.NotNil(t, DictConfig(conf))
 }
