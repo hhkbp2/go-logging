@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log/syslog"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -57,6 +58,22 @@ var (
 		"LOG_LOCAL7":   syslog.LOG_LOCAL7,
 	}
 )
+
+// Apply all configuration in specified file.
+func ApplyConfigFile(file string) error {
+	ext := filepath.Ext(file)
+	switch ext {
+	case ".json":
+		return ApplyJsonConfigFile(file)
+	case ".yml":
+		fallthrough
+	case ".yaml":
+		return ApplyYAMLConfigFile(file)
+	default:
+		return errors.New(fmt.Sprintf(
+			"unknown format of the specified file: %s", file))
+	}
+}
 
 // Apply all configuration in specified json file.
 func ApplyJsonConfigFile(file string) error {
