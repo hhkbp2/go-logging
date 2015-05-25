@@ -103,7 +103,7 @@ Compile and run the code above, it would generate a log file "./test.log" under 
 
 #### Example 3: Config Log via configuration file.
 
-Write a configuration file ```config.xml``` as the following:
+Write a configuration file ```config.yml``` as the following:
 
 ```go
 formatters:
