@@ -73,3 +73,25 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	require.Equal(t, totalSize, uint64(fileInfo.Size()))
 	removeFile(t, testFileName)
 }
+
+func BenchmarkRotatingFileHandler(b *testing.B) {
+	b.StopTimer()
+	defer Shutdown()
+	if FileExists(testFileName) {
+		os.Remove(testFileName)
+	}
+	rotateMaxBytes := uint64(1024 * 1024 * 1024 * 1) // 1G
+	backupCount := uint32(0)
+	handler, err := NewRotatingFileHandler(
+		testFileName, os.O_APPEND, rotateMaxBytes, backupCount)
+	if err != nil {
+		panic("fail to get handler")
+	}
+	logger := GetLogger("rfileBen")
+	logger.AddHandler(handler)
+	message := strings.Repeat("abcdefghij", 10)
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		logger.Errorf(message)
+	}
+}
