@@ -8,12 +8,13 @@ import (
 )
 
 var (
-	testFileName = "./test.log"
-	testFileMode = os.O_TRUNC
+	testFileName   = "./test.log"
+	testFileMode   = os.O_TRUNC
+	testBufferSize = 0
 )
 
 func TestFileHandler(t *testing.T) {
-	handler, err := NewFileHandler(testFileName, testFileMode)
+	handler, err := NewFileHandler(testFileName, testFileMode, testBufferSize)
 	require.Nil(t, err)
 	logger := GetLogger("file1")
 	logger.AddHandler(handler)
@@ -31,7 +32,7 @@ func TestFileHandler(t *testing.T) {
 }
 
 func TestFileHandler_Asctime(t *testing.T) {
-	handler, err := NewFileHandler(testFileName, testFileMode)
+	handler, err := NewFileHandler(testFileName, testFileMode, testBufferSize)
 	formatter := NewStandardFormatter(
 		"%(asctime)s %(message)s",
 		"%Y-%m-%d %H:%M:%S %3n")

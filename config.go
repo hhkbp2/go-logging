@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"log/syslog"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -81,8 +84,10 @@ func ApplyJsonConfigFile(file string) error {
 	if err != nil {
 		return err
 	}
+	decoder := json.NewDecoder(bytes.NewBuffer(bin))
+	decoder.UseNumber()
 	var conf Conf
-	if err = json.Unmarshal(bin, &conf); err != nil {
+	if err = decoder.Decode(&conf); err != nil {
 		return err
 	}
 	return DictConfig(&conf)
@@ -119,12 +124,31 @@ func (self ConfMap) GetBool(key string) (bool, error) {
 	if !ok {
 		return false, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
-	b, ok := value.(bool)
-	if !ok {
-		return false, errors.New(fmt.Sprintf(
-			"value: %#v of key: %s should be of type bool", value, key))
+	if v, ok := value.(bool); ok {
+		return v, nil
 	}
-	return b, nil
+	if str, ok := value.(string); ok {
+		switch {
+		case strings.EqualFold(str, "true"):
+			return true, nil
+		case strings.EqualFold(str, "false"):
+			return false, nil
+		}
+	}
+	if n, ok := value.(json.Number); ok {
+		v, err := n.Int64()
+		if err != nil {
+			return false, err
+		}
+		if v != 0 {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	}
+	return false, errors.New(fmt.Sprintf(
+		"value: %#v of key: %s should be of type bool not type %s",
+		value, key, reflect.TypeOf(value)))
 }
 
 func (self ConfMap) GetInt(key string) (int, error) {
@@ -132,12 +156,22 @@ func (self ConfMap) GetInt(key string) (int, error) {
 	if !ok {
 		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
-	i, ok := value.(int)
-	if !ok {
-		return 0, errors.New(fmt.Sprintf(
-			"value: %#v of key: %s should be of type int", value, key))
+	if v, ok := value.(int); ok {
+		return v, nil
 	}
-	return i, nil
+	if str, ok := value.(string); ok {
+		return strconv.Atoi(str)
+	}
+	if n, ok := value.(json.Number); ok {
+		v, err := n.Int64()
+		if err != nil {
+			return 0, err
+		}
+		return int(v), nil
+	}
+	return 0, errors.New(fmt.Sprintf(
+		"value: %#v of key: %s should be of type int not type %s",
+		value, key, reflect.TypeOf(value)))
 }
 
 func (self ConfMap) GetUint16(key string) (uint16, error) {
@@ -145,16 +179,26 @@ func (self ConfMap) GetUint16(key string) (uint16, error) {
 	if !ok {
 		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
-	i, ok := value.(uint16)
-	if !ok {
-		j, ok := value.(int)
-		if !ok {
-			return 0, errors.New(fmt.Sprintf(
-				"value: %#v of key: %s should be of type uint16", value, key))
-		}
-		i = uint16(j)
+	if v, ok := value.(int); ok {
+		return uint16(v), nil
 	}
-	return i, nil
+	if str, ok := value.(string); ok {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			return 0, err
+		}
+		return uint16(v), nil
+	}
+	if n, ok := value.(json.Number); ok {
+		v, err := n.Int64()
+		if err != nil {
+			return 0, err
+		}
+		return uint16(v), nil
+	}
+	return 0, errors.New(fmt.Sprintf(
+		"value: %#v of key: %s should be of type uint16 not type %s",
+		value, key, reflect.TypeOf(value)))
 }
 
 func (self ConfMap) GetUint32(key string) (uint32, error) {
@@ -162,16 +206,26 @@ func (self ConfMap) GetUint32(key string) (uint32, error) {
 	if !ok {
 		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
-	i, ok := value.(uint32)
-	if !ok {
-		j, ok := value.(int)
-		if !ok {
-			return 0, errors.New(fmt.Sprintf(
-				"value: %#v of key: %s should be of type uint32", value, key))
-		}
-		i = uint32(j)
+	if v, ok := value.(int); ok {
+		return uint32(v), nil
 	}
-	return i, nil
+	if str, ok := value.(string); ok {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			return 0, err
+		}
+		return uint32(v), nil
+	}
+	if n, ok := value.(json.Number); ok {
+		v, err := n.Int64()
+		if err != nil {
+			return 0, err
+		}
+		return uint32(v), nil
+	}
+	return 0, errors.New(fmt.Sprintf(
+		"value: %#v of key: %s should be of type uint32 not type %s",
+		value, key, reflect.TypeOf(value)))
 }
 
 func (self ConfMap) GetUint64(key string) (uint64, error) {
@@ -179,16 +233,26 @@ func (self ConfMap) GetUint64(key string) (uint64, error) {
 	if !ok {
 		return 0, errors.New(fmt.Sprintf("no config for key: %s", key))
 	}
-	i, ok := value.(uint64)
-	if !ok {
-		j, ok := value.(int)
-		if !ok {
-			return 0, errors.New(fmt.Sprintf(
-				"value: %#v of key: %s should be of type uint64", value, key))
-		}
-		i = uint64(j)
+	if v, ok := value.(int); ok {
+		return uint64(v), nil
 	}
-	return i, nil
+	if str, ok := value.(string); ok {
+		v, err := strconv.Atoi(str)
+		if err != nil {
+			return 0, err
+		}
+		return uint64(v), nil
+	}
+	if n, ok := value.(json.Number); ok {
+		v, err := n.Int64()
+		if err != nil {
+			return 0, err
+		}
+		return uint64(v), nil
+	}
+	return 0, errors.New(fmt.Sprintf(
+		"value: %#v of key: %s should be of type uint64 not type %s",
+		value, key, reflect.TypeOf(value)))
 }
 
 func (self ConfMap) GetString(key string) (string, error) {
@@ -441,7 +505,11 @@ func DictConfig(conf *Conf) error {
 			if !ok {
 				return errors.New(fmt.Sprintf("unknown file mode: %s", modeStr))
 			}
-			handler, err = NewFileHandler(filename, mode)
+			bufferSize, err := m.GetInt("bufferSize")
+			if err != nil {
+				return err
+			}
+			handler, err = NewFileHandler(filename, mode, bufferSize)
 			if err != nil {
 				return err
 			}
@@ -458,6 +526,10 @@ func DictConfig(conf *Conf) error {
 			if !ok {
 				return errors.New(fmt.Sprintf("unknown file mode: %s", modeStr))
 			}
+			bufferSize, err := m.GetInt("bufferSize")
+			if err != nil {
+				return err
+			}
 			maxBytes, err := m.GetUint64("maxBytes")
 			if err != nil {
 				return err
@@ -467,12 +539,24 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 			handler, err = NewRotatingFileHandler(
-				filepath, mode, maxBytes, backupCount)
+				filepath, mode, bufferSize, maxBytes, backupCount)
 			if err != nil {
 				return err
 			}
 		case "TimedRotatingFileHandler":
 			filepath, err := m.GetString("filepath")
+			if err != nil {
+				return err
+			}
+			modeStr, err := m.GetString("mode")
+			if err != nil {
+				return err
+			}
+			mode, ok := FileModeNameToValues[modeStr]
+			if !ok {
+				return errors.New(fmt.Sprintf("unknown file mode: %s", modeStr))
+			}
+			bufferSize, err := m.GetInt("bufferSize")
 			if err != nil {
 				return err
 			}
@@ -493,7 +577,7 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 			handler, err = NewTimedRotatingFileHandler(
-				filepath, when, interval, backupCount, utc)
+				filepath, mode, bufferSize, when, interval, backupCount, utc)
 			if err != nil {
 				return err
 			}

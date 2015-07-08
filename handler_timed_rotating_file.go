@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	Day                          = 24 * time.Hour
-	Week                         = 7 * Day
-	DefaultTimedRotatingFileMode = os.O_APPEND
+	Day  = 24 * time.Hour
+	Week = 7 * Day
 )
 
 var (
@@ -44,6 +43,8 @@ type TimedRotatingFileHandler struct {
 // Here we stick to semantics of the original Python logging interface.
 func NewTimedRotatingFileHandler(
 	filepath string,
+	mode int,
+	bufferSize int,
 	when string,
 	interval uint32,
 	backupCount uint32,
@@ -98,8 +99,7 @@ func NewTimedRotatingFileHandler(
 		return nil, ErrorInvalidFormat
 	}
 	timeInterval = time.Duration(int64(timeInterval) * int64(interval))
-	mode := DefaultTimedRotatingFileMode
-	baseHandler, err := NewBaseRotatingHandler(filepath, mode)
+	baseHandler, err := NewBaseRotatingHandler(filepath, mode, bufferSize)
 	if err != nil {
 		return nil, err
 	}

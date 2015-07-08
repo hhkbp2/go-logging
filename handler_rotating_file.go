@@ -33,9 +33,9 @@ type BaseRotatingHandler struct {
 
 // Initialize base rotating handler with specified filename for stream logging.
 func NewBaseRotatingHandler(
-	filepath string, mode int) (*BaseRotatingHandler, error) {
+	filepath string, mode, bufferSize int) (*BaseRotatingHandler, error) {
 
-	fileHandler, err := NewFileHandler(filepath, mode)
+	fileHandler, err := NewFileHandler(filepath, mode, bufferSize)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,9 @@ func (self *BaseRotatingHandler) RolloverEmit(
 	// for performance optimization.
 	doRollover, message := handler.ShouldRollover(record)
 	if doRollover {
+		if err := handler.Flush(); err != nil {
+			return err
+		}
 		if err := handler.DoRollover(); err != nil {
 			return err
 		}
@@ -63,9 +66,6 @@ func (self *BaseRotatingHandler) RolloverEmit(
 	// Message already has a trailing '\n'.
 	err := self.GetStream().Write(message)
 	if err != nil {
-		return err
-	}
-	if err = handler.Flush(); err != nil {
 		return err
 	}
 	return nil
@@ -99,6 +99,7 @@ type RotatingFileHandler struct {
 func NewRotatingFileHandler(
 	filepath string,
 	mode int,
+	bufferSize int,
 	maxBytes uint64,
 	backupCount uint32) (*RotatingFileHandler, error) {
 
@@ -110,7 +111,7 @@ func NewRotatingFileHandler(
 	if maxBytes > 0 {
 		mode = os.O_APPEND
 	}
-	base, err := NewBaseRotatingHandler(filepath, mode)
+	base, err := NewBaseRotatingHandler(filepath, mode, bufferSize)
 	if err != nil {
 		return nil, err
 	}
@@ -125,11 +126,12 @@ func NewRotatingFileHandler(
 func MustNewRotatingFileHandler(
 	filepath string,
 	mode int,
+	bufferSize int,
 	maxBytes uint64,
 	backupCount uint32) *RotatingFileHandler {
 
 	handler, err := NewRotatingFileHandler(
-		filepath, mode, maxBytes, backupCount)
+		filepath, mode, bufferSize, maxBytes, backupCount)
 	if err != nil {
 		panic("NewRotatingFileHandler(), error: " + err.Error())
 	}

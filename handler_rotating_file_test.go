@@ -27,7 +27,11 @@ func removeFile(t *testing.T, filename string) {
 func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 	defer Shutdown()
 	handler, err := NewRotatingFileHandler(
-		testFileName, testFileMode, testRotateMaxBytes, testRotateBackupCount)
+		testFileName,
+		testFileMode,
+		testBufferSize,
+		testRotateMaxBytes,
+		testRotateBackupCount)
 	require.Nil(t, err)
 	logger := GetLogger("rfile1")
 	logger.AddHandler(handler)
@@ -54,7 +58,11 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	}
 	backupCount := uint32(0)
 	handler, err := NewRotatingFileHandler(
-		testFileName, os.O_APPEND, testRotateMaxBytes, backupCount)
+		testFileName,
+		os.O_APPEND,
+		testBufferSize,
+		testRotateMaxBytes,
+		backupCount)
 	require.Nil(t, err)
 	logger := GetLogger("rfile2")
 	logger.AddHandler(handler)
@@ -83,7 +91,11 @@ func BenchmarkRotatingFileHandler(b *testing.B) {
 	rotateMaxBytes := uint64(1024 * 1024 * 1024 * 1) // 1G
 	backupCount := uint32(0)
 	handler, err := NewRotatingFileHandler(
-		testFileName, os.O_APPEND, rotateMaxBytes, backupCount)
+		testFileName,
+		os.O_APPEND,
+		testBufferSize,
+		rotateMaxBytes,
+		backupCount)
 	if err != nil {
 		panic("fail to get handler")
 	}

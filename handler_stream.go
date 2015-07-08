@@ -61,9 +61,6 @@ func (self *StreamHandler) Emit2(
 	if err := self.stream.Write(fmt.Sprintf("%s\n", message)); err != nil {
 		return err
 	}
-	if err := handler.Flush(); err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -24,6 +24,7 @@ handlers:
         level: ERROR
         filename: ./test.log
         mode: O_TRUNC
+        bufferSize: 0
         formatter: ft2
 formatters:
     ft1:

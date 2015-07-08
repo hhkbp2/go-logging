@@ -39,7 +39,13 @@ func TestTimedRotatingFileHandler_WithBackup(t *testing.T) {
 	format := "%Y-%m-%d_%H-%M-%S"
 	interval := 2
 	handler, err := NewTimedRotatingFileHandler(
-		testFileName, when, uint32(interval), testRotateBackupCount, false)
+		testFileName,
+		testFileMode,
+		testBufferSize,
+		when,
+		uint32(interval),
+		testRotateBackupCount,
+		false)
 	require.Nil(t, err)
 	logger := GetLogger("trfile")
 	logger.AddHandler(handler)
