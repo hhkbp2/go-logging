@@ -64,6 +64,7 @@ import (
 func main() {
 	filePath := "./test.log"
 	fileMode := os.O_APPEND
+	bufferSize := 0
 	// set the maximum size of every file to 100 M bytes
 	fileMaxBytes := uint64(100 * 1024 * 1024)
 	// keep 9 backup at most(including the current using one,
@@ -71,7 +72,7 @@ func main() {
 	backupCount := uint32(9)
 	// create a handler(which represents a log message destination)
 	handler := logging.MustNewRotatingFileHandler(
-		filePath, fileMode, fileMaxBytes, backupCount)
+		filePath, fileMode, bufferSize, fileMaxBytes, backupCount)
 
 	// the format for the whole log message
 	format := "%(asctime)s %(levelname)s (%(filename)s:%(lineno)d) " +
@@ -115,6 +116,7 @@ handlers:
         class: RotatingFileHandler
         filepath: "./test.log"
         mode: O_APPEND
+        bufferSize: 0
         # 100 * 1024 * 1024 -> 100M
         maxBytes: 104857600
         backupCount: 9
