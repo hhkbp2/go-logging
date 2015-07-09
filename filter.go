@@ -1,9 +1,7 @@
 package logging
 
 import (
-	"github.com/deckarep/golang-set"
 	"strings"
-	"sync"
 )
 
 // Filter interface is to perform arbitrary filtering of LogRecords.
@@ -56,32 +54,27 @@ type Filterer interface {
 // An base class for loggers and handlers which allows them to share common code
 // of managing the filters.
 type StandardFilterer struct {
-	filters mapset.Set
-	lock    sync.RWMutex
+	filters *ListSet
 }
 
 // Initialize the standard filterer, with no filter.
 func NewStandardFilterer() *StandardFilterer {
 	return &StandardFilterer{
-		filters: mapset.NewThreadUnsafeSet(),
+		filters: NewListSet(),
 	}
 }
 
 // Add the specified filter.
 func (self *StandardFilterer) AddFilter(filter Filter) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	if !self.filters.Contains(filter) {
-		self.filters.Add(filter)
+	if !self.filters.SetContains(filter) {
+		self.filters.SetAdd(filter)
 	}
 }
 
 // Remove the specified filter.
 func (self *StandardFilterer) RemoveFilter(filter Filter) {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	if self.filters.Contains(filter) {
-		self.filters.Remove(filter)
+	if self.filters.SetContains(filter) {
+		self.filters.SetRemove(filter)
 	}
 }
 
@@ -90,11 +83,9 @@ func (self *StandardFilterer) RemoveFilter(filter Filter) {
 // thi and the record is then dropped. Returns a zero value if a record
 // is to be dropped, else non-zero.
 func (self *StandardFilterer) Filter(record *LogRecord) int {
-	self.lock.RLock()
-	defer self.lock.RUnlock()
 	recordVote := 1
-	for i := range self.filters.Iter() {
-		filter, _ := i.(Filter)
+	for e := self.filters.Front(); e != nil; e = e.Next() {
+		filter, _ := e.Value.(Filter)
 		if !filter.Filter(record) {
 			recordVote = 0
 			break
@@ -104,13 +95,6 @@ func (self *StandardFilterer) Filter(record *LogRecord) int {
 }
 
 // Return all the filter in this filterer.
-func (self *StandardFilterer) GetFilters() []Filter {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	result := make([]Filter, 0, self.filters.Cardinality())
-	for i := range self.filters.Iter() {
-		filter, _ := i.(Filter)
-		result = append(result, filter)
-	}
-	return result
+func (self *StandardFilterer) GetFilters() *ListSet {
+	return self.filters
 }

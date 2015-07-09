@@ -2,7 +2,6 @@ package logging
 
 import (
 	"errors"
-	"github.com/deckarep/golang-set"
 	"math"
 	"math/rand"
 	"time"
@@ -181,12 +180,12 @@ type ErrorRetry struct {
 	maxJitter   float32
 	maxDelay    time.Duration
 	deadline    time.Duration
-	retryErrors mapset.Set
+	retryErrors *ListSet
 }
 
 func NewErrorRetry() *ErrorRetry {
-	set := mapset.NewThreadUnsafeSet()
-	set.Add(ForceRetryError)
+	set := NewListSet()
+	set.SetAdd(ForceRetryError)
 	return &ErrorRetry{
 		sleepFunc:   time.Sleep,
 		maxTries:    -1,
@@ -235,7 +234,7 @@ func (self *ErrorRetry) Deadline(deadline time.Duration) *ErrorRetry {
 }
 
 func (self *ErrorRetry) OnError(err error) *ErrorRetry {
-	self.retryErrors.Add(err)
+	self.retryErrors.SetAdd(err)
 	return self
 }
 
@@ -248,7 +247,7 @@ func (self *ErrorRetry) Copy() *ErrorRetry {
 		maxJitter:   self.maxJitter,
 		maxDelay:    self.maxDelay,
 		deadline:    self.deadline,
-		retryErrors: self.retryErrors.Clone(),
+		retryErrors: self.retryErrors.SetClone(),
 	}
 }
 
@@ -279,7 +278,7 @@ func (self *ErrorRetry) Do(fn func() error) error {
 	var err error
 	for attempt := 0; attempt != self.maxTries; attempt++ {
 		if err = fn(); err != nil {
-			if self.retryErrors.Contains(err) {
+			if self.retryErrors.SetContains(err) {
 				sleepTime := self.jitterDelay(latestDelay)
 				if self.deadline != UnlimitedDeadline {
 					if (time.Since(startTime) + sleepTime) >= self.deadline {

@@ -1,42 +1,41 @@
 package logging
 
 import (
-	"github.com/deckarep/golang-set"
 	"sync"
 )
 
 type HandlerCloser struct {
-	handlers mapset.Set
+	handlers *ListSet
 	lock     sync.Mutex
 }
 
 func NewHandlerCloser() *HandlerCloser {
 	return &HandlerCloser{
-		handlers: mapset.NewThreadUnsafeSet(),
+		handlers: NewListSet(),
 	}
 }
 
 func (self *HandlerCloser) AddHandler(handler Handler) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	if !self.handlers.Contains(handler) {
-		self.handlers.Add(handler)
+	if !self.handlers.SetContains(handler) {
+		self.handlers.SetAdd(handler)
 	}
 }
 
 func (self *HandlerCloser) RemoveHandler(handler Handler) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	if self.handlers.Contains(handler) {
-		self.handlers.Remove(handler)
+	if self.handlers.SetContains(handler) {
+		self.handlers.SetRemove(handler)
 	}
 }
 
 func (self *HandlerCloser) Close() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	for i := range self.handlers.Iter() {
-		handler, _ := i.(Handler)
+	for e := self.handlers.Front(); e != nil; e = e.Next() {
+		handler, _ := e.Value.(Handler)
 		handler.Close()
 	}
 }

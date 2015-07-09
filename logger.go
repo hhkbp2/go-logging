@@ -2,7 +2,6 @@ package logging
 
 import (
 	"errors"
-	"github.com/deckarep/golang-set"
 	"runtime"
 	"strings"
 	"sync"
@@ -36,14 +35,14 @@ type Node interface {
 // the place of nodes for which no loggers have been defined. This class is
 // intended for internal use only and not as part of the public API.
 type PlaceHolder struct {
-	Loggers mapset.Set
+	Loggers *ListSet
 }
 
 // Initialize a PlaceHolder with the specified logger being a child of
 // this PlaceHolder.
 func NewPlaceHolder(logger Logger) *PlaceHolder {
 	object := &PlaceHolder{
-		Loggers: mapset.NewThreadUnsafeSet(),
+		Loggers: NewListSet(),
 	}
 	object.Append(logger)
 	return object
@@ -55,8 +54,8 @@ func (self *PlaceHolder) Type() NodeType {
 
 // Add the specified logger as a child of this PlaceHolder.
 func (self *PlaceHolder) Append(logger Logger) {
-	if !self.Loggers.Contains(logger) {
-		self.Loggers.Add(logger)
+	if !self.Loggers.SetContains(logger) {
+		self.Loggers.SetAdd(logger)
 	}
 }
 
@@ -137,6 +136,8 @@ type Logger interface {
 	RemoveHandler(handler Handler)
 	// Return all handler of this Logger.
 	GetHandlers() []Handler
+	// Call all handlers on the specified record.
+	CallHandlers(record *LogRecord)
 
 	// Filterer
 	Filterer
@@ -184,7 +185,7 @@ type StandardLogger struct {
 	findCallerFunc FindCallerFunc
 	parent         Logger
 	propagate      bool
-	handlers       mapset.Set
+	handlers       *ListSet
 	manager        *Manager
 	lock           sync.RWMutex
 }
@@ -198,7 +199,7 @@ func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
 		findCallerFunc:   findCaller,
 		level:            level,
 		propagate:        true,
-		handlers:         mapset.NewSet(),
+		handlers:         NewListSet(),
 		manager:          nil,
 	}
 	return object
@@ -399,7 +400,7 @@ var (
 
 func (self *StandardLogger) Handle(record *LogRecord) {
 	if self.Filter(record) > 0 {
-		self.callHandlers(record)
+		self.traverseHandlers(record)
 	}
 }
 
@@ -408,14 +409,10 @@ func (self *StandardLogger) Handle(record *LogRecord) {
 // hierarchy. Stop searching up the hierarchy whenever a logger with the
 // "propagate" attribute set to zero is found - that will be the last
 // logger whose handlers are called.
-func (self *StandardLogger) callHandlers(record *LogRecord) {
+func (self *StandardLogger) traverseHandlers(record *LogRecord) {
 	var call Logger = self
 	for call != nil {
-		for _, handler := range call.GetHandlers() {
-			if record.Level >= handler.GetLevel() {
-				handler.Handle(record)
-			}
-		}
+		call.CallHandlers(record)
 		if !call.GetPropagate() {
 			call = nil
 		} else {
@@ -427,28 +424,39 @@ func (self *StandardLogger) callHandlers(record *LogRecord) {
 func (self *StandardLogger) AddHandler(handler Handler) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	if !self.handlers.Contains(handler) {
-		self.handlers.Add(handler)
+	if !self.handlers.SetContains(handler) {
+		self.handlers.SetAdd(handler)
 	}
 }
 
 func (self *StandardLogger) RemoveHandler(handler Handler) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
-	if self.handlers.Contains(handler) {
-		self.handlers.Remove(handler)
+	if self.handlers.SetContains(handler) {
+		self.handlers.SetRemove(handler)
 	}
 }
 
 func (self *StandardLogger) GetHandlers() []Handler {
 	self.lock.RLock()
 	defer self.lock.RUnlock()
-	result := make([]Handler, 0, self.handlers.Cardinality())
-	for i := range self.handlers.Iter() {
-		handler, _ := i.(Handler)
+	result := make([]Handler, 0, self.handlers.Len())
+	for e := self.handlers.Front(); e != nil; e = e.Next() {
+		handler, _ := e.Value.(Handler)
 		result = append(result, handler)
 	}
 	return result
+}
+
+func (self *StandardLogger) CallHandlers(record *LogRecord) {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+	for e := self.handlers.Front(); e != nil; e = e.Next() {
+		handler, _ := e.Value.(Handler)
+		if record.Level >= handler.GetLevel() {
+			handler.Handle(record)
+		}
+	}
 }
 
 func (self *StandardLogger) GetManager() *Manager {
@@ -609,8 +617,8 @@ func (self *Manager) fixupParents(logger Logger) {
 // specified logger.
 func (self *Manager) fixupChildren(placeHolder *PlaceHolder, logger Logger) {
 	name := logger.GetName()
-	for i := range placeHolder.Loggers.Iter() {
-		l, _ := i.(Logger)
+	for e := placeHolder.Loggers.Front(); e != nil; e = e.Next() {
+		l, _ := e.Value.(Logger)
 		parent := l.GetParent()
 		if !strings.HasPrefix(parent.GetName(), name) {
 			logger.SetParent(parent)
