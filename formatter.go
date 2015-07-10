@@ -145,7 +145,7 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 	}
 	return &StandardFormatter{
 		format:            format,
-		strFormat:         strFormat,
+		strFormat:         strFormat + "\n",
 		getFormatArgsFunc: getFormatArgsFunc,
 		toFormatTime:      toFormatTime,
 		dateFormat:        dateFormat,

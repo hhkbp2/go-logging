@@ -2,7 +2,6 @@ package logging
 
 import (
 	"errors"
-	"fmt"
 	"github.com/hhkbp2/go-strftime"
 	"io/ioutil"
 	"os"
@@ -185,7 +184,7 @@ func (self *TimedRotatingFileHandler) ShouldRollover(
 	record *LogRecord) (bool, string) {
 
 	overTime := time.Now().After(self.rolloverTime)
-	return overTime, fmt.Sprintf("%s\n", self.Format(record))
+	return overTime, self.Format(record)
 }
 
 // Determine the files to delete when rolling over.

@@ -1,9 +1,5 @@
 package logging
 
-import (
-	"fmt"
-)
-
 // An interface to stream abstraction.
 type Stream interface {
 	// Report the current offset in the stream.
@@ -58,7 +54,7 @@ func (self *StreamHandler) Emit2(
 	handler Handler, record *LogRecord) error {
 
 	message := handler.Format(record)
-	if err := self.stream.Write(fmt.Sprintf("%s\n", message)); err != nil {
+	if err := self.stream.Write(message); err != nil {
 		return err
 	}
 	return nil

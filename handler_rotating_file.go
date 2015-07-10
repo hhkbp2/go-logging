@@ -144,7 +144,7 @@ func MustNewRotatingFileHandler(
 func (self *RotatingFileHandler) ShouldRollover(
 	record *LogRecord) (bool, string) {
 
-	message := fmt.Sprintf("%s\n", self.Format(record))
+	message := self.Format(record)
 	if self.maxBytes > 0 {
 		offset, err := self.GetStream().Tell()
 		if err != nil {
