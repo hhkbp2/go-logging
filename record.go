@@ -25,9 +25,7 @@ type LogRecord struct {
 	Format      string
 	UseFormat   bool
 	Args        []interface{}
-	// Message is a pointer to the real message which is updated only once.
-	// A trick to optimize the performance.
-	Message *string
+	Message     string
 }
 
 // Initialize a logging record with interesting information.
@@ -53,7 +51,7 @@ func NewLogRecord(
 		Format:      format,
 		UseFormat:   useFormat,
 		Args:        args,
-		Message:     nil,
+		Message:     "",
 	}
 }
 
@@ -66,14 +64,12 @@ func (self *LogRecord) String() string {
 // Return the message for this LogRecord.
 // The message is composed of the Message and any user-supplied arguments.
 func (self *LogRecord) GetMessage() string {
-	if self.Message == nil {
-		var message string
+	if len(self.Message) == 0 {
 		if self.UseFormat {
-			message = fmt.Sprintf(self.Format, self.Args...)
+			self.Message = fmt.Sprintf(self.Format, self.Args...)
 		} else {
-			message = fmt.Sprint(self.Args...)
+			self.Message = fmt.Sprint(self.Args...)
 		}
-		self.Message = &message
 	}
-	return *self.Message
+	return self.Message
 }

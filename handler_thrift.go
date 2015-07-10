@@ -65,7 +65,7 @@ func (self *ThriftHandler) Emit(record *LogRecord) error {
 		FileName: record.FileName,
 		LineNo:   int32(record.LineNo),
 		FuncName: record.FuncName,
-		Message:  *record.Message,
+		Message:  record.Message,
 	}
 	if self.client == nil {
 		if err := self.connect(); err != nil {

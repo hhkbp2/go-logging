@@ -19,16 +19,16 @@ const (
 // remove all others to minimize the network bandwidth usage.
 type SocketLogRecord struct {
 	CreatedTime time.Time
-	AscTime     *string
-	Name        *string
+	AscTime     string
+	Name        string
 	Level       LogLevelType
-	PathName    *string
-	FileName    *string
+	PathName    string
+	FileName    string
 	LineNo      uint32
-	FuncName    *string
-	Format      *string
+	FuncName    string
+	Format      string
 	UseFormat   bool
-	Message     *string
+	Message     string
 }
 
 // A handler class which write logging records, in gob format, to
@@ -71,14 +71,14 @@ func NewSocketHandler(host string, port uint16) *SocketHandler {
 func (self *SocketHandler) Marshal(record *LogRecord) ([]byte, error) {
 	r := SocketLogRecord{
 		CreatedTime: record.CreatedTime,
-		AscTime:     &record.AscTime,
-		Name:        &record.Name,
+		AscTime:     record.AscTime,
+		Name:        record.Name,
 		Level:       record.Level,
-		PathName:    &record.PathName,
-		FileName:    &record.FileName,
+		PathName:    record.PathName,
+		FileName:    record.FileName,
 		LineNo:      record.LineNo,
-		FuncName:    &record.FuncName,
-		Format:      &record.Format,
+		FuncName:    record.FuncName,
+		Format:      record.Format,
 		UseFormat:   record.UseFormat,
 		Message:     record.Message,
 	}

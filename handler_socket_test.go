@@ -25,7 +25,7 @@ func _testSetupSocketServer(
 			var record SocketLogRecord
 			err := decoder.Decode(&record)
 			require.Nil(t, err)
-			received.PushBack(*record.Message)
+			received.PushBack(record.Message)
 			ch <- 1
 		}(conn)
 	}()

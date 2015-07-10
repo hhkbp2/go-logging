@@ -7,6 +7,7 @@ import (
 	gen "github.com/hhkbp2/go-logging/gen-go/logging"
 	"github.com/hhkbp2/testify/require"
 	"testing"
+	"time"
 )
 
 type TestThriftServerHandler struct {
@@ -58,6 +59,8 @@ func TestThriftHandler(t *testing.T) {
 	ch := make(chan int, 1)
 	server := _testSetupThriftServer(t, host, port, serverReceived, ch)
 	require.Equal(t, 0, serverReceived.Len())
+	// wait a little while for server to startup
+	time.Sleep(time.Millisecond * 100)
 	handler := NewThriftHandler(host, port)
 	logger := GetLogger("thrift")
 	logger.AddHandler(handler)

@@ -42,7 +42,7 @@ var (
 			return record.AscTime
 		},
 		"%(message)s": func(record *LogRecord) string {
-			return *record.Message
+			return record.Message
 		},
 	}
 	formatRe = initFormatRegexp()

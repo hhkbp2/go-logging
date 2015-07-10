@@ -110,7 +110,6 @@ func (self *FileStream) Flush() error {
 
 func (self *FileStream) Close() error {
 	self.Flush()
-	self.File.Sync()
 	return self.File.Close()
 }
 
