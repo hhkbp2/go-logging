@@ -59,12 +59,15 @@ package main
 import (
 	"github.com/hhkbp2/go-logging"
 	"os"
+	"time"
 )
 
 func main() {
 	filePath := "./test.log"
 	fileMode := os.O_APPEND
 	bufferSize := 0
+	bufferFlushTime := 30 * time.Second
+	inputChanSize := 1
 	// set the maximum size of every file to 100 M bytes
 	fileMaxBytes := uint64(100 * 1024 * 1024)
 	// keep 9 backup at most(including the current using one,
@@ -72,7 +75,8 @@ func main() {
 	backupCount := uint32(9)
 	// create a handler(which represents a log message destination)
 	handler := logging.MustNewRotatingFileHandler(
-		filePath, fileMode, bufferSize, fileMaxBytes, backupCount)
+		filePath, fileMode, bufferSize, bufferFlushTime, inputChanSize,
+		fileMaxBytes, backupCount)
 
 	// the format for the whole log message
 	format := "%(asctime)s %(levelname)s (%(filename)s:%(lineno)d) " +
