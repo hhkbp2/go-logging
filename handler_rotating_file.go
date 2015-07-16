@@ -3,6 +3,8 @@ package logging
 import (
 	"fmt"
 	"os"
+	"sync"
+	"time"
 )
 
 // Check whether the specified directory/file exists or not.
@@ -71,12 +73,20 @@ func (self *BaseRotatingHandler) RolloverEmit(
 	return nil
 }
 
+type HandleFunc func(record *LogRecord) int
+
 // Handler for logging to a set of files, which switches from one file to
 // the next when the current file reaches a certain size.
 type RotatingFileHandler struct {
 	*BaseRotatingHandler
-	maxBytes    uint64
-	backupCount uint32
+	maxBytes        uint64
+	backupCount     uint32
+	bufferFlushTime time.Duration
+	inputChanSize   int
+	handleFunc      HandleFunc
+	inputChan       chan *LogRecord
+	exitChan        chan int
+	group           *sync.WaitGroup
 }
 
 // Open the specified file and use it as the stream for logging.
@@ -96,10 +106,22 @@ type RotatingFileHandler struct {
 // "app.log.3" etc. respectively.
 //
 // If maxBytes is zero, rollover never occurs.
+//
+// bufferSize specifies the size of the internal buffer. If it is positive,
+// the internal buffer will be enabled, the logs will be first written into
+// the internal buffer, when the internal buffer is full all buffer content
+// will be flushed to file.
+// bufferFlushTime specifies the time for flushing the internal buffer
+// in period, no matter the buffer is full or not.
+// inputChanSize specifies the chan size of the handler. If it is positive,
+// this handler will be initialized as a standardlone go routine to handle
+// log message.
 func NewRotatingFileHandler(
 	filepath string,
 	mode int,
 	bufferSize int,
+	bufferFlushTime time.Duration,
+	inputChanSize int,
 	maxBytes uint64,
 	backupCount uint32) (*RotatingFileHandler, error) {
 
@@ -119,6 +141,21 @@ func NewRotatingFileHandler(
 		BaseRotatingHandler: base,
 		maxBytes:            maxBytes,
 		backupCount:         backupCount,
+		bufferFlushTime:     bufferFlushTime,
+		inputChanSize:       inputChanSize,
+	}
+	if inputChanSize > 0 {
+		object.handleFunc = object.handleChan
+		object.inputChan = make(chan *LogRecord, inputChanSize)
+		object.exitChan = make(chan int, 1)
+		object.group = &sync.WaitGroup{}
+		object.group.Add(1)
+		go func() {
+			defer object.group.Done()
+			object.loop()
+		}()
+	} else {
+		object.handleFunc = object.handleCall
 	}
 	return object, nil
 }
@@ -127,11 +164,19 @@ func MustNewRotatingFileHandler(
 	filepath string,
 	mode int,
 	bufferSize int,
+	bufferFlushTime time.Duration,
+	inputChanSize int,
 	maxBytes uint64,
 	backupCount uint32) *RotatingFileHandler {
 
 	handler, err := NewRotatingFileHandler(
-		filepath, mode, bufferSize, maxBytes, backupCount)
+		filepath,
+		mode,
+		bufferSize,
+		bufferFlushTime,
+		inputChanSize,
+		maxBytes,
+		backupCount)
 	if err != nil {
 		panic("NewRotatingFileHandler(), error: " + err.Error())
 	}
@@ -175,9 +220,9 @@ func (self *RotatingFileHandler) RotateFile(sourceFile, destFile string) error {
 
 // Do a rollover, as described above.
 func (self *RotatingFileHandler) DoRollover() (err error) {
-	self.Close()
+	self.FileHandler.Close()
 	defer func() {
-		if e := self.Open(); e != nil {
+		if e := self.FileHandler.Open(); e != nil {
 			if e == nil {
 				err = e
 			}
@@ -205,6 +250,37 @@ func (self *RotatingFileHandler) Emit(record *LogRecord) error {
 	return self.RolloverEmit(self, record)
 }
 
-func (self *RotatingFileHandler) Handle(record *LogRecord) int {
+func (self *RotatingFileHandler) handleCall(record *LogRecord) int {
 	return self.Handle2(self, record)
+}
+
+func (self *RotatingFileHandler) handleChan(record *LogRecord) int {
+	self.inputChan <- record
+	return 0
+}
+
+func (self *RotatingFileHandler) loop() {
+	ticker := time.NewTicker(self.bufferFlushTime)
+	for {
+		select {
+		case r := <-self.inputChan:
+			self.Handle2(self, r)
+		case <-self.exitChan:
+			return
+		case <-ticker.C:
+			self.Flush()
+		}
+	}
+}
+
+func (self *RotatingFileHandler) Handle(record *LogRecord) int {
+	return self.handleFunc(record)
+}
+
+func (self *RotatingFileHandler) Close() {
+	if self.inputChanSize > 0 {
+		self.exitChan <- 1
+		self.group.Wait()
+	}
+	self.BaseRotatingHandler.Close()
 }

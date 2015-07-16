@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -530,6 +531,15 @@ func DictConfig(conf *Conf) error {
 			if err != nil {
 				return err
 			}
+			bufferFlushTimeMS, err := m.GetInt("bufferFlushTime")
+			if err != nil {
+				return err
+			}
+			bufferFlushTime := time.Millisecond * time.Duration(bufferFlushTimeMS)
+			inputChanSize, err := m.GetInt("inputChanSize")
+			if err != nil {
+				return err
+			}
 			maxBytes, err := m.GetUint64("maxBytes")
 			if err != nil {
 				return err
@@ -539,7 +549,13 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 			handler, err = NewRotatingFileHandler(
-				filepath, mode, bufferSize, maxBytes, backupCount)
+				filepath,
+				mode,
+				bufferSize,
+				bufferFlushTime,
+				inputChanSize,
+				maxBytes,
+				backupCount)
 			if err != nil {
 				return err
 			}

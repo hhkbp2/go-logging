@@ -117,6 +117,9 @@ handlers:
         filepath: "./test.log"
         mode: O_APPEND
         bufferSize: 0
+        # 30 * 1000 ms -> 30 seconds
+        bufferFlushTime: 30000
+        inputChanSize: 1
         # 100 * 1024 * 1024 -> 100M
         maxBytes: 104857600
         backupCount: 9

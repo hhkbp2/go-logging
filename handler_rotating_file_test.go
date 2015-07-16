@@ -5,9 +5,12 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 var (
+	testBufferFlushTime   = time.Millisecond * 5000
+	testInputChanSize     = 1
 	testRotateMaxBytes    = uint64(5 * 1000) // 5k bytes
 	testRotateBackupCount = uint32(1)
 )
@@ -30,6 +33,8 @@ func TestRotatingFileHandler_TruncateWithBackup(t *testing.T) {
 		testFileName,
 		testFileMode,
 		testBufferSize,
+		testBufferFlushTime,
+		testInputChanSize,
 		testRotateMaxBytes,
 		testRotateBackupCount)
 	require.Nil(t, err)
@@ -61,6 +66,8 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 		testFileName,
 		os.O_APPEND,
 		testBufferSize,
+		testBufferFlushTime,
+		testInputChanSize,
 		testRotateMaxBytes,
 		backupCount)
 	require.Nil(t, err)
@@ -70,6 +77,7 @@ func TestRotatingFileHandler_AppendWithoutBackup(t *testing.T) {
 	size := uint64(len(message) + 1)
 	totalSize := testRotateMaxBytes * (uint64(testRotateBackupCount) + 2)
 	times := totalSize / size
+	require.Equal(t, totalSize, size*times)
 	for i := uint64(0); i < times; i++ {
 		logger.Errorf(message)
 	}
@@ -94,6 +102,8 @@ func BenchmarkRotatingFileHandler(b *testing.B) {
 		testFileName,
 		os.O_APPEND,
 		testBufferSize,
+		testBufferFlushTime,
+		testInputChanSize,
 		rotateMaxBytes,
 		backupCount)
 	if err != nil {
