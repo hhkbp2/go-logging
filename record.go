@@ -26,6 +26,7 @@ type LogRecord struct {
 	UseFormat   bool
 	Args        []interface{}
 	Message     string
+	Goid			  int
 }
 
 // Initialize a logging record with interesting information.
@@ -36,6 +37,7 @@ func NewLogRecord(
 	fileName string,
 	lineNo uint32,
 	funcName string,
+  goid int,
 	format string,
 	useFormat bool,
 	args []interface{}) *LogRecord {
@@ -52,6 +54,7 @@ func NewLogRecord(
 		UseFormat:   useFormat,
 		Args:        args,
 		Message:     "",
+		Goid: goid,
 	}
 }
 

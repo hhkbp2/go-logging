@@ -35,6 +35,9 @@ var (
 		"%(funcname)s": func(record *LogRecord) string {
 			return record.FuncName
 		},
+		"%(goid)d": func(record *LogRecord) string {
+			return fmt.Sprintf("%d", record.Goid)
+		},
 		"%(created)d": func(record *LogRecord) string {
 			return fmt.Sprintf("%d", record.CreatedTime.UnixNano())
 		},
