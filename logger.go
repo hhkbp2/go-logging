@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"strconv"
+	"fmt"
 )
 
 var (
@@ -347,6 +349,17 @@ func (self *StandardLogger) Logf(
 	}
 }
 
+func goid() int {
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine "))[0]
+	id, err := strconv.Atoi(idField)
+	if err != nil {
+		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
+	}
+	return id
+}
+
 func (self *StandardLogger) doLog(
 	level LogLevelType, args ...interface{}) {
 
@@ -358,6 +371,7 @@ func (self *StandardLogger) doLog(
 		callerInfo.FileName,
 		callerInfo.LineNo,
 		callerInfo.FuncName,
+		goid(),
 		"",
 		false,
 		args)
@@ -375,6 +389,7 @@ func (self *StandardLogger) doLogf(
 		callerInfo.FileName,
 		callerInfo.LineNo,
 		callerInfo.FuncName,
+                goid(),
 		format,
 		true,
 		args)
