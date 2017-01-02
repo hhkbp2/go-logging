@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-// A LogRecord instance represents and event being logged.
+// A LogRecord instance represents an event being logged.
 // LogRecord instances are created every time something is logged. They
-// contain all the information pretinent to the event being logged. The
+// contain all the information pertinent to the event being logged. The
 // main information passed in is in Message and Args, which are combined
 // using fmt.Sprintf() or fmt.Sprint(), depending on value of UseFormat flag,
 // to create the message field of the record. The record also includes
