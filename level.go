@@ -10,8 +10,8 @@ type LogLevelType uint8
 
 // Default levels and level names, these can be replaced with any positive set
 // of values having corresponding names. There is a pseudo-level, NOTSET, which
-// is only realy there as a lower limit for user-defined levels. Handlers and
-// loggers anre initialized with NOTSET so that they will log all messages, even
+// is only really there as a lower limit for user-defined levels. Handlers and
+// loggers are initialized with NOTSET so that they will log all messages, even
 // at user-defined levels.
 const (
 	LevelCritical LogLevelType = 50
