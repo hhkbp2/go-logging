@@ -635,16 +635,6 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 			handler = NewSocketHandler(host, port)
-		case "ThriftHandler":
-			host, err := m.GetString("host")
-			if err != nil {
-				return err
-			}
-			port, err := m.GetUint16("port")
-			if err != nil {
-				return err
-			}
-			handler = NewThriftHandler(host, port)
 		default:
 			return errors.New(fmt.Sprintf("unsupported class name: %s", className))
 		}
