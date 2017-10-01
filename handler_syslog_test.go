@@ -1,9 +1,12 @@
+// +build !windows
+
 package logging
 
 import (
-	"github.com/hhkbp2/testify/require"
 	"log/syslog"
 	"testing"
+
+	"github.com/hhkbp2/testify/require"
 )
 
 func TestSyslogHandler(t *testing.T) {
