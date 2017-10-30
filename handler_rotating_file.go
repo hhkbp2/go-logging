@@ -85,7 +85,6 @@ type RotatingFileHandler struct {
 	inputChanSize   int
 	handleFunc      HandleFunc
 	inputChan       chan *LogRecord
-	exitChan        chan int
 	group           *sync.WaitGroup
 }
 
@@ -147,7 +146,6 @@ func NewRotatingFileHandler(
 	if inputChanSize > 0 {
 		object.handleFunc = object.handleChan
 		object.inputChan = make(chan *LogRecord, inputChanSize)
-		object.exitChan = make(chan int, 1)
 		object.group = &sync.WaitGroup{}
 		object.group.Add(1)
 		go func() {
@@ -264,9 +262,11 @@ func (self *RotatingFileHandler) loop() {
 	for {
 		select {
 		case r := <-self.inputChan:
+			if r == nil {
+				return
+			}
+
 			self.Handle2(self, r)
-		case <-self.exitChan:
-			return
 		case <-ticker.C:
 			self.Flush()
 		}
@@ -279,7 +279,7 @@ func (self *RotatingFileHandler) Handle(record *LogRecord) int {
 
 func (self *RotatingFileHandler) Close() {
 	if self.inputChanSize > 0 {
-		self.exitChan <- 1
+		self.inputChan <- nil // sending "stop signal" to loop()
 		self.group.Wait()
 	}
 	self.BaseRotatingHandler.Close()
