@@ -143,6 +143,9 @@ func NewRotatingFileHandler(
 		bufferFlushTime:     bufferFlushTime,
 		inputChanSize:       inputChanSize,
 	}
+	// register object to closer
+	Closer.RemoveHandler(object.BaseRotatingHandler)
+	Closer.AddHandler(object)
 	if inputChanSize > 0 {
 		object.handleFunc = object.handleChan
 		object.inputChan = make(chan *LogRecord, inputChanSize)
@@ -279,7 +282,8 @@ func (self *RotatingFileHandler) Handle(record *LogRecord) int {
 
 func (self *RotatingFileHandler) Close() {
 	if self.inputChanSize > 0 {
-		self.inputChan <- nil // sending "stop signal" to loop()
+		// send a nil record as "stop signal" to exit loop.
+		self.inputChan <- nil
 		self.group.Wait()
 	}
 	self.BaseRotatingHandler.Close()
