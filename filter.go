@@ -80,7 +80,7 @@ func (self *StandardFilterer) RemoveFilter(filter Filter) {
 
 // Determine if a record is loggable by consulting all the filters.
 // The default is to allow the record to be logged: any filter can veto
-// thi and the record is then dropped. Returns a zero value if a record
+// this and the record is then dropped. Returns a zero value if a record
 // is to be dropped, else non-zero.
 func (self *StandardFilterer) Filter(record *LogRecord) int {
 	recordVote := 1
