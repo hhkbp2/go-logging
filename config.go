@@ -464,7 +464,7 @@ func DictConfig(conf *Conf) error {
 		className, ok := arg.(string)
 		if !ok {
 			return errors.New(fmt.Sprintf(
-				"handler id: %s class should be of type string"))
+				"handler id: %s class should be of type string", name))
 		}
 		var handler Handler
 		switch className {
