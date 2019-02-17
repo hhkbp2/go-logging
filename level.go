@@ -21,6 +21,7 @@ const (
 	LevelWarn     LogLevelType = LevelWarning
 	LevelInfo     LogLevelType = 20
 	LevelDebug    LogLevelType = 10
+	LevelTrace    LogLevelType = 5
 	LevelNotset   LogLevelType = 0
 )
 
@@ -31,6 +32,7 @@ var (
 		LevelWarn:   "WARN",
 		LevelInfo:   "INFO",
 		LevelDebug:  "DEBUG",
+		LevelTrace:  "TRACE",
 		LevelNotset: "NOTSET",
 	}
 	nameToLevels = map[string]LogLevelType{
@@ -39,6 +41,7 @@ var (
 		"WARN":   LevelWarn,
 		"INFO":   LevelInfo,
 		"DEBUG":  LevelDebug,
+		"TRACE":  LevelTrace,
 		"NOTSET": LevelNotset,
 	}
 	levelLock sync.RWMutex

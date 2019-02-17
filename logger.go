@@ -107,6 +107,9 @@ type Logger interface {
 	// Debug formats using the default formats for its operands and
 	// logs a message with severity "LevelDebug".
 	Debug(args ...interface{})
+	// Trace formats using the default formats for its operands and
+	// logs a message with severity "LevelTrace".
+	Trace(args ...interface{})
 	// Log formats using the default formats for its operands and
 	// logs a message with specified severity level.
 	Log(level LogLevelType, args ...interface{})
@@ -126,6 +129,9 @@ type Logger interface {
 	// Debugf formats according to a format specifier and
 	// logs a message with severity "LevelDebug".
 	Debugf(format string, args ...interface{})
+	// Tracef formats according to a format specifier and
+	// logs a message with severity "LevelTrace".
+	Tracef(format string, args ...interface{})
 	// Logf formats according to a format specifier and
 	// logs a message with specified severity level.
 	Logf(level LogLevelType, format string, args ...interface{})
@@ -301,6 +307,12 @@ func (self *StandardLogger) Debug(args ...interface{}) {
 	}
 }
 
+func (self *StandardLogger) Trace(args ...interface{}) {
+	if self.IsEnabledFor(LevelTrace) {
+		self.doLog(LevelTrace, args...)
+	}
+}
+
 func (self *StandardLogger) Log(
 	level LogLevelType, args ...interface{}) {
 
@@ -336,6 +348,12 @@ func (self *StandardLogger) Infof(format string, args ...interface{}) {
 func (self *StandardLogger) Debugf(format string, args ...interface{}) {
 	if self.IsEnabledFor(LevelDebug) {
 		self.doLogf(LevelDebug, format, args...)
+	}
+}
+
+func (self *StandardLogger) Tracef(format string, args ...interface{}) {
+	if self.IsEnabledFor(LevelTrace) {
+		self.doLogf(LevelTrace, format, args...)
 	}
 }
 
