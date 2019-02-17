@@ -16,7 +16,9 @@ var (
 		"funcname",
 		"",
 		false,
-		[]interface{}{"message"})
+		CtxFields{"ctxid": "123"},
+		[]interface{}{"message"},
+	)
 )
 
 func WithLineFeed(s string) string {
@@ -83,4 +85,11 @@ func TestFormat_Message(t *testing.T) {
 	formatter := defaultFormatter
 	require.Equal(t,
 		WithLineFeed(testRecord.GetMessage()), formatter.Format(testRecord))
+}
+
+func TestFormat_TXID(t *testing.T) {
+	formatter := NewStandardFormatter("%(message)s TX_ID=%(ctxid)s", "")
+	expectedStr := fmt.Sprintf("message TX_ID=123")
+	require.Equal(t,
+		WithLineFeed(expectedStr), formatter.Format(testRecord))
 }

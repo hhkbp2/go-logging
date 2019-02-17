@@ -11,40 +11,47 @@ import (
 // the attribute string.
 type ExtractAttr func(record *LogRecord) string
 
+type RecordValueReceiver func(record *LogRecord) interface{}
+
+func GetValueForField(fieldName string, record *LogRecord) interface{} {
+	var value interface{}
+
+	switch fieldName {
+	case "name":
+		value = record.Name
+	case "levelno":
+		value = record.Level
+	case "levelname":
+		value = record.Level
+	case "pathname":
+		value = record.PathName
+	case "filename":
+		value = record.FileName
+	case "lineno":
+		value = fmt.Sprintf("%d", record.LineNo)
+	case "funcname":
+		value = record.FuncName
+	case "created":
+		value = fmt.Sprintf("%d", record.CreatedTime.UnixNano())
+	case "asctime":
+		value = record.AscTime
+	case "message":
+		value = record.Message
+	default:
+		ctxField, ok := record.CtxFields[fieldName]
+		if !ok {
+			// no value for context field 'fieldName'
+			// return default
+			ctxField = "null"
+		}
+		value = ctxField
+	}
+
+	return value
+}
+
 // All predefined attribute string and their ExtractAttr functions.
 var (
-	attrToFunc = map[string]ExtractAttr{
-		"%(name)s": func(record *LogRecord) string {
-			return record.Name
-		},
-		"%(levelno)d": func(record *LogRecord) string {
-			return fmt.Sprintf("%d", record.Level)
-		},
-		"%(levelname)s": func(record *LogRecord) string {
-			return GetLevelName(record.Level)
-		},
-		"%(pathname)s": func(record *LogRecord) string {
-			return record.PathName
-		},
-		"%(filename)s": func(record *LogRecord) string {
-			return record.FileName
-		},
-		"%(lineno)d": func(record *LogRecord) string {
-			return fmt.Sprintf("%d", record.LineNo)
-		},
-		"%(funcname)s": func(record *LogRecord) string {
-			return record.FuncName
-		},
-		"%(created)d": func(record *LogRecord) string {
-			return fmt.Sprintf("%d", record.CreatedTime.UnixNano())
-		},
-		"%(asctime)s": func(record *LogRecord) string {
-			return record.AscTime
-		},
-		"%(message)s": func(record *LogRecord) string {
-			return record.Message
-		},
-	}
 	formatRe = initFormatRegexp()
 
 	// Default format strings.
@@ -55,14 +62,7 @@ var (
 
 // Initialize global regexp for attribute matching.
 func initFormatRegexp() *regexp.Regexp {
-	var buf bytes.Buffer
-	buf.WriteString("(%(?:%")
-	for attr, _ := range attrToFunc {
-		buf.WriteString("|")
-		buf.WriteString(regexp.QuoteMeta(attr[1:]))
-	}
-	buf.WriteString("))")
-	re := buf.String()
+	re := `(%\([_\w]+\))(s|d)?`
 	return regexp.MustCompile(re)
 }
 
@@ -112,6 +112,9 @@ type StandardFormatter struct {
 func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 	toFormatTime := false
 	size := 0
+	keywordRe := `\(([_\w]+)\)`
+	keywordRegexp := regexp.MustCompile(keywordRe)
+	var replaceFuncs []RecordValueReceiver
 	f1 := func(match string) string {
 		if match == "%%" {
 			return "%"
@@ -120,21 +123,28 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 			toFormatTime = true
 		}
 		size++
+		matches := keywordRegexp.FindStringSubmatch(match)
+		keyword := matches[1]
+
+		valueReceiver := func(fieldName string) RecordValueReceiver {
+			var extractFunc RecordValueReceiver
+			extractFunc = func(record *LogRecord) interface{} {
+				return GetValueForField(fieldName, record)
+			}
+			return extractFunc
+		}(keyword)
+		replaceFuncs = append(replaceFuncs, valueReceiver)
+
+		if keyword == "levelno" {
+			return "%d"
+		}
 		return "%s"
 	}
 	strFormat := formatRe.ReplaceAllStringFunc(format, f1)
-	funs := make([]ExtractAttr, 0, size)
-	f2 := func(match string) string {
-		extractFunc, ok := attrToFunc[match]
-		if ok {
-			funs = append(funs, extractFunc)
-		}
-		return match
-	}
-	formatRe.ReplaceAllStringFunc(format, f2)
+
 	getFormatArgsFunc := func(record *LogRecord) []interface{} {
-		result := make([]interface{}, 0, len(funs))
-		for _, f := range funs {
+		result := make([]interface{}, 0, len(replaceFuncs))
+		for _, f := range replaceFuncs {
 			result = append(result, f(record))
 		}
 		return result
