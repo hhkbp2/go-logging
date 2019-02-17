@@ -156,6 +156,11 @@ type Logger interface {
 	GetParent() Logger
 	// Set the parent Logger of this Logger.
 	SetParent(parent Logger)
+
+	PutCtxFields(fields CtxFields) *StandardLogger
+	GetCtxFields() CtxFields
+
+	GetCtxField(key string) string
 }
 
 type FindCallerFunc func() *CallerInfo
@@ -183,6 +188,16 @@ func findCaller() *CallerInfo {
 	}
 }
 
+type CtxFields map[string]string
+
+func (fields *CtxFields) save(k, v string) {
+	(*fields)[k] = v
+}
+
+func (fields *CtxFields) get(k string) string {
+	return (*fields)[k]
+}
+
 // The standard logger implementation class.
 type StandardLogger struct {
 	*StandardFilterer
@@ -194,6 +209,7 @@ type StandardLogger struct {
 	handlers       *ListSet
 	manager        *Manager
 	lock           sync.RWMutex
+	fields         CtxFields
 }
 
 // Initialize a standard logger instance with name and logging level.
@@ -207,8 +223,35 @@ func NewStandardLogger(name string, level LogLevelType) *StandardLogger {
 		propagate:        true,
 		handlers:         NewListSet(),
 		manager:          nil,
+		fields:           make(CtxFields),
 	}
 	return object
+}
+
+func (self *StandardLogger) PutCtxFields(fields CtxFields) *StandardLogger {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+
+	clone := *self
+	if clone.fields == nil {
+		clone.fields = make(CtxFields)
+	}
+	for k, v := range fields {
+		clone.fields.save(k, v)
+	}
+
+	return &clone
+}
+
+func (self *StandardLogger) GetCtxFields() CtxFields {
+	return self.fields
+}
+
+func (self *StandardLogger) GetCtxField(key string) string {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+	v := self.fields.get(key)
+	return v
 }
 
 func (self *StandardLogger) Type() NodeType {
@@ -369,6 +412,8 @@ func (self *StandardLogger) doLog(
 	level LogLevelType, args ...interface{}) {
 
 	callerInfo := self.findCallerFunc()
+	fields := self.fields
+
 	record := NewLogRecord(
 		self.name,
 		level,
@@ -378,6 +423,7 @@ func (self *StandardLogger) doLog(
 		callerInfo.FuncName,
 		"",
 		false,
+		fields,
 		args)
 	self.Handle(record)
 }
@@ -386,6 +432,7 @@ func (self *StandardLogger) doLogf(
 	level LogLevelType, format string, args ...interface{}) {
 
 	callerInfo := self.findCallerFunc()
+	fields := self.fields
 	record := NewLogRecord(
 		self.name,
 		level,
@@ -395,6 +442,7 @@ func (self *StandardLogger) doLogf(
 		callerInfo.FuncName,
 		format,
 		true,
+		fields,
 		args)
 	self.Handle(record)
 }
