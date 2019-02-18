@@ -57,7 +57,7 @@ func NewLogRecord(
 
 // Return the string representation for this LogRecord.
 func (self *LogRecord) String() string {
-	return fmt.Sprintf("<LogRecord: %s, %s, %s, %s, \"%s\">",
+	return fmt.Sprintf("<LogRecord: %s, %s, %s, %d, \"%s\">",
 		self.Name, self.Level, self.PathName, self.LineNo, self.Message)
 }
 
