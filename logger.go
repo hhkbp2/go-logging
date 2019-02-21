@@ -233,9 +233,13 @@ func (self *StandardLogger) PutCtxFields(fields CtxFields) *StandardLogger {
 	defer self.lock.RUnlock()
 
 	clone := *self
-	if clone.fields == nil {
-		clone.fields = make(CtxFields)
+	clone.fields = make(CtxFields)
+
+	// clone current fields
+	for k, v := range self.GetCtxFields() {
+		clone.fields.save(k, v)
 	}
+	// append new fields
 	for k, v := range fields {
 		clone.fields.save(k, v)
 	}
