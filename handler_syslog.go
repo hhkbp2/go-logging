@@ -76,8 +76,6 @@ func (self *SyslogHandler) Emit(record *LogRecord) error {
 		err = self.writer.Info(message)
 	case LevelDebug:
 		err = self.writer.Debug(message)
-	case LevelTrace:
-		err = self.writer.Debug(message)
 	default:
 		_, err = self.writer.Write([]byte(message))
 	}
