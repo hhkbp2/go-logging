@@ -114,7 +114,7 @@ func (self *BaseHandler) Unlock() {
 // for the module.
 func (self *BaseHandler) Format(record *LogRecord) string {
 	self.formatterLock.RLock()
-	self.formatterLock.RUnlock()
+	defer self.formatterLock.RUnlock()
 	var formatter Formatter
 	if self.formatter != nil {
 		formatter = self.formatter
