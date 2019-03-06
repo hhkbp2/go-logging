@@ -425,7 +425,7 @@ func (self *StandardLogger) Handle(record *LogRecord) {
 // Pass a record to all relevant handlers.
 // Loop through all handlers for this logger and its parents in the logger
 // hierarchy. Stop searching up the hierarchy whenever a logger with the
-// "propagate" attribute set to zero is found - that will be the last
+// "propagate" attribute set to false is found - that will be the last
 // logger whose handlers are called.
 func (self *StandardLogger) traverseHandlers(record *LogRecord) {
 	var call Logger = self
@@ -607,7 +607,7 @@ func (self *Manager) fixupParents(logger Logger) {
 	name := logger.GetName()
 	index := strings.LastIndex(name, ".")
 	var parent Logger
-	if (index > 0) && (parent == nil) {
+	for (index > 0) && (parent == nil) {
 		parentStr := name[:index]
 		node, ok := self.loggers[parentStr]
 		if !ok {
