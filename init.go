@@ -102,6 +102,11 @@ func Debugf(format string, args ...interface{}) {
 	root.Debugf(format, args...)
 }
 
+// Log a message with severity "LevelTrace" on the root logger.
+func Tracef(format string, args ...interface{}) {
+	root.Tracef(format, args...)
+}
+
 // Log a message with specified severity level on the root logger.
 func Logf(level LogLevelType, format string, args ...interface{}) {
 	root.Logf(level, format, args...)
