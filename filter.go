@@ -64,14 +64,14 @@ func NewStandardFilterer() *StandardFilterer {
 	}
 }
 
-// Add the specified filter.
+// AddFilter adds the specified filter.
 func (self *StandardFilterer) AddFilter(filter Filter) {
 	if !self.filters.SetContains(filter) {
 		self.filters.SetAdd(filter)
 	}
 }
 
-// Remove the specified filter.
+// RemoveFilter removes the specified filter.
 func (self *StandardFilterer) RemoveFilter(filter Filter) {
 	if self.filters.SetContains(filter) {
 		self.filters.SetRemove(filter)
@@ -94,7 +94,7 @@ func (self *StandardFilterer) Filter(record *LogRecord) int {
 	return recordVote
 }
 
-// Return all the filter in this filterer.
+// GetFilters returns all the filter in this filterer.
 func (self *StandardFilterer) GetFilters() *ListSet {
 	return self.filters
 }

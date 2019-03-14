@@ -61,7 +61,7 @@ func getLevelName(level LogLevelType) (name string, ok bool) {
 	return levelName, ok
 }
 
-// Return the textual representation of specified logging level.
+// GetLevelName returns the textual representation of specified logging level.
 // If the level is one of the predefined levels (LevelFatal, LevelError,
 // LevelWarn, LevelInfo, LevelDebug) then you get the corresponding string.
 // If you have registered level with name using AddLevel() then the name you

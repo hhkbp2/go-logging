@@ -55,13 +55,13 @@ func NewLogRecord(
 	}
 }
 
-// Return the string representation for this LogRecord.
+// String returns the string representation for this LogRecord.
 func (self *LogRecord) String() string {
 	return fmt.Sprintf("<LogRecord: %s, %s, %s, %d, \"%s\">",
 		self.Name, self.Level, self.PathName, self.LineNo, self.Message)
 }
 
-// Return the message for this LogRecord.
+// GetMessage returns the message for this LogRecord.
 // The message is composed of the Message and any user-supplied arguments.
 func (self *LogRecord) GetMessage() string {
 	if len(self.Message) == 0 {

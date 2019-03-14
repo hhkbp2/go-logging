@@ -56,7 +56,7 @@ func initialize() {
 	Closer = NewHandlerCloser()
 }
 
-// Ensure all log messages are flushed before program exits.
+// Shutdown ensures all log messages are flushed before program exits.
 func Shutdown() {
 	Closer.Close()
 	initialize()
@@ -67,7 +67,7 @@ func SetLoggerMaker(maker LoggerMaker) {
 	manager.SetLoggerMaker(maker)
 }
 
-// Return a logger with the specified name, creating it if necessary.
+// GetLogger returns a logger with the specified name, creating it if necessary.
 // If empty name is specified, return the root logger.
 func GetLogger(name string) Logger {
 	if len(name) > 0 {

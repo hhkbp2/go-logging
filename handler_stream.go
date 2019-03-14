@@ -32,7 +32,7 @@ func NewStreamHandler(
 	return object
 }
 
-// Return the underlying stream.
+// GetStream returns the underlying stream.
 func (self *StreamHandler) GetStream() Stream {
 	return self.stream
 }

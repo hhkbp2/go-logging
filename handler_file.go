@@ -145,7 +145,7 @@ func NewFileHandler(filename string, mode int, bufferSize int) (*FileHandler, er
 	return object, nil
 }
 
-// Return the absolute path of logging file.
+// GetFilePath returns the absolute path of logging file.
 func (self *FileHandler) GetFilePath() string {
 	return self.filepath
 }

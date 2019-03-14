@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Check whether the specified directory/file exists or not.
+// FileExists checks whether the specified directory/file exists or not.
 func FileExists(filename string) bool {
 	if _, err := os.Stat(filename); err != nil {
 		if os.IsNotExist(err) {

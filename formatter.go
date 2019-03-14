@@ -153,7 +153,7 @@ func NewStandardFormatter(format string, dateFormat string) *StandardFormatter {
 	}
 }
 
-// Return the creation time of the specified LogRecord as formatted text.
+// FormatTime returns the creation time of the specified LogRecord as formatted text.
 // This method should be called from Format() by a formatter which wants to
 // make use of a formatted time. This method can be overridden in formatters
 // to provide for any specific requirement, but the basic behaviour is as
@@ -196,12 +196,12 @@ func NewBufferingFormatter(lineFormatter Formatter) *BufferingFormatter {
 	}
 }
 
-// Return the header string for the specified records.
+// FormatHeader returns the header string for the specified records.
 func (self *BufferingFormatter) FormatHeader(_ []*LogRecord) string {
 	return ""
 }
 
-// Return the footer string for the specified records.
+// FormatFooter returns the footer string for the specified records.
 func (self *BufferingFormatter) FormatFooter(_ []*LogRecord) string {
 	return ""
 }

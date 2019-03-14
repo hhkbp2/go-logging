@@ -52,7 +52,7 @@ func (self *PlaceHolder) Type() NodeType {
 	return NodePlaceHolder
 }
 
-// Add the specified logger as a child of this PlaceHolder.
+// Append adds the specified logger as a child of this PlaceHolder.
 func (self *PlaceHolder) Append(logger Logger) {
 	if !self.Loggers.SetContains(logger) {
 		self.Loggers.SetAdd(logger)
@@ -260,7 +260,7 @@ func (self *StandardLogger) IsEnabledFor(level LogLevelType) bool {
 	return level >= self.GetEffectiveLevel()
 }
 
-// Get the effective level for this logger.
+// GetEffectiveLevel gets the effective level for this logger.
 // Loop through this logger and its parents in the logger hierarchy,
 // looking for a non-zero logging level. Return the first one found.
 func (self *StandardLogger) GetEffectiveLevel() LogLevelType {
@@ -501,7 +501,7 @@ func (self *StandardLogger) SetParent(parent Logger) {
 	self.parent = parent
 }
 
-// Get a logger which is descendant to this one.
+// GetChild gets a logger which is descendant to this one.
 // This is a convenience method, such that
 //     logging.GetLogger("abc").GetChild("def.ghi")
 // is the same as
@@ -565,7 +565,7 @@ func (self *Manager) SetLoggerMaker(maker LoggerMaker) {
 	self.loggerMaker = maker
 }
 
-// Get a logger with the specified name (channel name), creating it
+// GetLogger gets a logger with the specified name (channel name), creating it
 // if it doesn't yet exists. This name is a dot-separated hierarchical
 // name, such as "a", "a.b", "a.b.c" or similar.
 //

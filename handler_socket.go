@@ -165,7 +165,7 @@ func (self *SocketHandler) Handle(record *LogRecord) int {
 	return self.Handle2(self, record)
 }
 
-// Handles an error during logging.
+// HandleError handles an error during logging.
 // An error has occurred during logging. Most likely cause connection lost.
 // Close the socket so that we can retry on the next event.
 func (self *SocketHandler) HandleError(record *LogRecord, err error) {
