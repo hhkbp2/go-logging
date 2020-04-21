@@ -601,6 +601,14 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 		case "SyslogHandler":
+			network, err := m.GetString("network")
+			if err != nil {
+				network = ""
+			}
+			raddr, err := m.GetString("raddr")
+			if err != nil {
+				raddr = ""
+			}
 			priorityStr, err := m.GetString("priority")
 			if err != nil {
 				return err
@@ -614,7 +622,11 @@ func DictConfig(conf *Conf) error {
 			if err != nil {
 				return err
 			}
-			handler, err = NewSyslogHandler(priority, tag)
+			if network != "" && raddr != "" {
+				handler, err = NewSyslogHandlerToAddr(network, raddr, priority, tag)
+			} else {
+				handler, err = NewSyslogHandler(priority, tag)
+			}
 			if err != nil {
 				return err
 			}
