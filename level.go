@@ -75,6 +75,14 @@ func GetLevelName(level LogLevelType) (name string) {
 	return name
 }
 
+// Return the level of specicial level name.
+func GetNameLevel(name string) (level LogLevelType, ok bool) {
+	levelLock.RLock()
+	defer levelLock.RUnlock()
+	level, ok = nameToLevels[name]
+	return level, ok
+}
+
 // Associate levelName with level.
 // This is used when converting levels to test during message formatting.
 func AddLevel(level LogLevelType, levelName string) {
