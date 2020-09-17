@@ -579,6 +579,15 @@ func DictConfig(conf *Conf) error {
 			if err != nil {
 				return err
 			}
+			bufferFlushTimeMS, err := m.GetInt("bufferFlushTime")
+			if err != nil {
+				return err
+			}
+			bufferFlushTime := time.Millisecond * time.Duration(bufferFlushTimeMS)
+			inputChanSize, err := m.GetInt("inputChanSize")
+			if err != nil {
+				return err
+			}
 			when, err := m.GetString("when")
 			if err != nil {
 				return err
@@ -596,7 +605,15 @@ func DictConfig(conf *Conf) error {
 				return err
 			}
 			handler, err = NewTimedRotatingFileHandler(
-				filepath, mode, bufferSize, when, interval, backupCount, utc)
+				filepath,
+				mode,
+				bufferSize,
+				bufferFlushTime,
+				inputChanSize,
+				when,
+				interval,
+				backupCount,
+				utc)
 			if err != nil {
 				return err
 			}

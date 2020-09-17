@@ -1,9 +1,10 @@
 package logging
 
 import (
-	"github.com/hhkbp2/testify/require"
 	"testing"
 	"time"
+
+	"github.com/hhkbp2/testify/require"
 )
 
 func TestShutdown(t *testing.T) {
@@ -13,7 +14,7 @@ func TestShutdown(t *testing.T) {
 	logger.AddHandler(handler)
 	message := "abcd"
 	logger.Errorf(message)
-	record, err := handler.GetEmitOnTimeout(time.Second * 0)
+	record, err := handler.GetEmitOnTimeout(time.Second * 1)
 	require.Nil(t, err)
 	require.Equal(t, message, record.GetMessage())
 }

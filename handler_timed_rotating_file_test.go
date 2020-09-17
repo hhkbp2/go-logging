@@ -1,14 +1,15 @@
 package logging
 
 import (
-	"github.com/hhkbp2/go-strftime"
-	"github.com/hhkbp2/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/hhkbp2/go-strftime"
+	"github.com/hhkbp2/testify/require"
 )
 
 func cleanupLogFils(t *testing.T, basepath string) int {
@@ -42,6 +43,8 @@ func TestTimedRotatingFileHandler_WithBackup(t *testing.T) {
 		testFileName,
 		testFileMode,
 		testBufferSize,
+		testBufferFlushTime,
+		testInputChanSize,
 		when,
 		uint32(interval),
 		testRotateBackupCount,

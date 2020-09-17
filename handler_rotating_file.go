@@ -111,7 +111,8 @@ type RotatingFileHandler struct {
 // the internal buffer, when the internal buffer is full all buffer content
 // will be flushed to file.
 // bufferFlushTime specifies the time for flushing the internal buffer
-// in period, no matter the buffer is full or not.
+// in period, no matter the buffer is full or not. Its value is used only when
+// inputChanSize is set to positive.
 // inputChanSize specifies the chan size of the handler. If it is positive,
 // this handler will be initialized as a standardlone go routine to handle
 // log message.

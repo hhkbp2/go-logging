@@ -2,13 +2,15 @@ package logging
 
 import (
 	"errors"
-	"github.com/hhkbp2/go-strftime"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/hhkbp2/go-strftime"
 )
 
 const (
@@ -27,14 +29,19 @@ var (
 // files are kept - the oldest ones are deleted.
 type TimedRotatingFileHandler struct {
 	*BaseRotatingHandler
-	when         string
-	weekday      int
-	interval     time.Duration
-	rolloverTime time.Time
-	backupCount  uint32
-	suffix       string
-	extMatch     string
-	utc          bool
+	when            string
+	weekday         int
+	interval        time.Duration
+	rolloverTime    time.Time
+	backupCount     uint32
+	suffix          string
+	extMatch        string
+	utc             bool
+	bufferFlushTime time.Duration
+	inputChanSize   int
+	handleFunc      HandleFunc
+	inputChan       chan *LogRecord
+	group           *sync.WaitGroup
 }
 
 // Note: weekday index starts from 0(Monday) to 6(Sunday) in Python.
@@ -44,6 +51,8 @@ func NewTimedRotatingFileHandler(
 	filepath string,
 	mode int,
 	bufferSize int,
+	bufferFlushTime time.Duration,
+	inputChanSize int,
 	when string,
 	interval uint32,
 	backupCount uint32,
@@ -116,8 +125,25 @@ func NewTimedRotatingFileHandler(
 		suffix:              suffix,
 		extMatch:            extMatch,
 		utc:                 utc,
+		bufferFlushTime:     bufferFlushTime,
+		inputChanSize:       inputChanSize,
 	}
 	object.rolloverTime = object.computeRolloverTime(fileInfo.ModTime())
+	// register object to closer
+	Closer.RemoveHandler(object.BaseRotatingHandler)
+	Closer.AddHandler(object)
+	if inputChanSize > 0 {
+		object.handleFunc = object.handleChan
+		object.inputChan = make(chan *LogRecord, inputChanSize)
+		object.group = &sync.WaitGroup{}
+		object.group.Add(1)
+		go func() {
+			defer object.group.Done()
+			object.loop()
+		}()
+	} else {
+		object.handleFunc = object.handleCall
+	}
 	return object, nil
 }
 
@@ -227,9 +253,9 @@ func (self *TimedRotatingFileHandler) getFilesToDelete() ([]string, error) {
 // count, then we have to get a list of matching filenames, sort them and
 // remove the one with the oldest suffix.
 func (self *TimedRotatingFileHandler) DoRollover() (err error) {
-	self.Close()
+	self.FileHandler.Close()
 	defer func() {
-		if e := self.Open(); e != nil {
+		if e := self.FileHandler.Open(); e != nil {
 			if e != nil {
 				err = e
 			}
@@ -272,6 +298,39 @@ func (self *TimedRotatingFileHandler) Emit(record *LogRecord) error {
 	return self.RolloverEmit(self, record)
 }
 
-func (self *TimedRotatingFileHandler) Handle(record *LogRecord) int {
+func (self *TimedRotatingFileHandler) handleCall(record *LogRecord) int {
 	return self.Handle2(self, record)
+}
+
+func (self *TimedRotatingFileHandler) handleChan(record *LogRecord) int {
+	self.inputChan <- record
+	return 0
+}
+
+func (self *TimedRotatingFileHandler) loop() {
+	ticker := time.NewTicker(self.bufferFlushTime)
+	for {
+		select {
+		case r := <-self.inputChan:
+			if r == nil {
+				return
+			}
+			self.Handle2(self, r)
+		case <-ticker.C:
+			self.Flush()
+		}
+	}
+}
+
+func (self *TimedRotatingFileHandler) Handle(record *LogRecord) int {
+	return self.handleFunc(record)
+}
+
+func (self *TimedRotatingFileHandler) Close() {
+	if self.inputChanSize > 0 {
+		// send a nil record as "stop signal" to exit loop.
+		self.inputChan <- nil
+		self.group.Wait()
+	}
+	self.BaseRotatingHandler.Close()
 }
