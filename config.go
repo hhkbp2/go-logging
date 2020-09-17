@@ -278,7 +278,7 @@ type Conf struct {
 	Loggers    map[string]ConfMap       `json:"loggers" yaml:"loggers"`
 	Handlers   map[string]ConfMap       `json:"handlers" yaml:"handlers"`
 	Formatters map[string]ConfFormatter `json:"formatters" yaml:"formatters"`
-	Filters    map[string]ConfFilter    `json:"filters" ysml:"filters"`
+	Filters    map[string]ConfFilter    `json:"filters" yaml:"filters"`
 }
 
 type ConfEnv struct {

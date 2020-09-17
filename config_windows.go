@@ -80,8 +80,8 @@ type ConfFilter struct {
 }
 
 type ConfFormatter struct {
-	Format     *string `json:"format"`
-	DateFormat *string `json:"datefmt"`
+	Format     *string `json:"format" yaml:"format"`
+	DateFormat *string `json:"datefmt" yaml:"datefmt"`
 }
 
 // A map represents configuration of various key and variable length.
@@ -238,12 +238,12 @@ func (self ConfMap) GetString(key string) (string, error) {
 }
 
 type Conf struct {
-	Version    int                      `json:"version"`
-	Root       ConfMap                  `json:"root"`
-	Loggers    map[string]ConfMap       `json:"loggers"`
-	Handlers   map[string]ConfMap       `json:"handlers"`
-	Formatters map[string]ConfFormatter `json:"formatters"`
-	Filters    map[string]ConfFilter    `json:"filters"`
+	Version    int                      `json:"version" yaml:"version"`
+	Root       ConfMap                  `json:"root" yaml:"root"`
+	Loggers    map[string]ConfMap       `json:"loggers" yaml:"loggers"`
+	Handlers   map[string]ConfMap       `json:"handlers" yaml:"handlers"`
+	Formatters map[string]ConfFormatter `json:"formatters" yaml:"formatters"`
+	Filters    map[string]ConfFilter    `json:"filters" yaml:"filters"`
 }
 
 type ConfEnv struct {
@@ -429,7 +429,7 @@ func DictConfig(conf *Conf) error {
 		className, ok := arg.(string)
 		if !ok {
 			return errors.New(fmt.Sprintf(
-				"handler id: %s class should be of type string"))
+				"handler id: %s class should be of type string", name))
 		}
 		var handler Handler
 		switch className {
